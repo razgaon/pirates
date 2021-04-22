@@ -1,9 +1,23 @@
-from flask import Flask, jsonify
+from flask import Flask
 from flasgger import swag_from, Swagger
 from core.game_generator import generate_game
+from db.shared import db
+import os
 
-app = Flask(__name__)
-swagger = Swagger(app)
+
+def create_app():
+    # existing code omitted
+
+    app = Flask(__name__)
+    app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///db.sqlite'
+    swagger = Swagger(app)
+    db.init_app(app)
+
+    return app, swagger
+
+
+app, swagger = create_app()
+# db.create_all(app=create_app()[0])
 
 
 @app.route('/')
@@ -15,15 +29,6 @@ def hello_world():
 @swag_from('/docs/game.yml')
 def generate_game():
     game = generate_game()
-
-
-def create_app():
-    # existing code omitted
-
-    from . import db
-    db.init_app(app)
-
-    return app
 
 
 if __name__ == '__main__':
