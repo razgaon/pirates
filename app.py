@@ -1,7 +1,9 @@
 from flask import Flask, jsonify
-from flask_swagger import swagger
+from flasgger import swag_from, Swagger
+from core.game_generator import generate_game
 
 app = Flask(__name__)
+swagger = Swagger(app)
 
 
 @app.route('/')
@@ -10,13 +12,9 @@ def hello_world():
 
 
 @app.route('/generate_game', methods=['GET'])
+@swag_from('/docs/game.yml')
 def generate_game():
-    return 'Hello World!'
-
-
-@app.route("/spec")
-def spec():
-    return jsonify(swagger(app))
+    game = generate_game()
 
 
 def create_app():

@@ -1,8 +1,13 @@
+attrs==20.3.0
 click==7.1.2
+flasgger==0.9.5
 Flask==1.1.2
-flask-swagger==0.2.14
 itsdangerous==1.1.0
 Jinja2==2.11.3
+jsonschema==3.2.0
 MarkupSafe==1.1.1
+mistune==0.8.4
+pyrsistent==0.17.3
 PyYAML==5.4.1
+six==1.15.0
 Werkzeug==1.0.1
