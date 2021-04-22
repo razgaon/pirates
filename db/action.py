@@ -10,3 +10,4 @@ class Action(db.Model):
 
     def __repr__(self):
         return '<User %r>' % self.username
+

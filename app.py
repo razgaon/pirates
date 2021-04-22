@@ -2,12 +2,13 @@ from flask import Flask
 from flasgger import swag_from, Swagger
 from core.game_generator import generate_game
 from db.shared import db
-import os
 
 
 def create_app():
-    # existing code omitted
-
+    """
+    Creates a new app and swagger instance.
+    :return:
+    """
     app = Flask(__name__)
     app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///db.sqlite'
     swagger = Swagger(app)
@@ -17,6 +18,8 @@ def create_app():
 
 
 app, swagger = create_app()
+
+
 # db.create_all(app=create_app()[0])
 
 
