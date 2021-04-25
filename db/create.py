@@ -1,5 +1,17 @@
-from db.shared import db
+from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
+
+app = Flask(__name__)
+db = SQLAlchemy(app)
+
+
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+
+    def __repr__(self):
+        return '<User %r>' % self.username
 
 
 class Action(db.Model):
@@ -11,3 +23,5 @@ class Action(db.Model):
     def __repr__(self):
         return '<User %r>' % self.username
 
+
+db.create_all()

@@ -1,31 +1,47 @@
 from flask import Flask
 from flasgger import swag_from, Swagger
 from core.game_generator import generate_game
-from db.shared import db
+from flask_sqlalchemy import SQLAlchemy
+from datetime import datetime
 
 
-def create_app():
-    """
-    Creates a new app and swagger instance.
-    :return:
-    """
-    app = Flask(__name__)
-    app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///db.sqlite'
-    swagger = Swagger(app)
-    db.init_app(app)
-
-    return app, swagger
+app = Flask(__name__)
+db = SQLAlchemy(app)
+app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///db.sqlite'
+swagger = Swagger(app)
 
 
-app, swagger = create_app()
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+
+    def __repr__(self):
+        return '<User %r>' % self.username
 
 
-# db.create_all(app=create_app()[0])
+class Action(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, unique=True, nullable=False)
+    action_type = db.Column(db.Integer, nullable=False)
+    insertion_time = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+
+    def __repr__(self):
+        return '<User %r>' % self.username
 
 
 @app.route('/')
 def hello_world():
-    return 'Hello World!'
+    user = User.query.one()
+    if user:
+        return f'{user}'
+
+    u = User(username='admin')
+    db.session.add(u)
+
+    db.session.commit()
+
+    print(user)
+    return f'{user}'
 
 
 @app.route('/generate_game', methods=['GET'])
@@ -35,4 +51,4 @@ def generate_game():
 
 
 if __name__ == '__main__':
-    create_app()
+    app.run(debug=True)

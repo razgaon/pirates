@@ -1,4 +1,4 @@
-from shared import db
+from db.shared import db
 
 
 class User(db.Model):
