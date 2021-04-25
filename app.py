@@ -1,8 +1,10 @@
-from flask import Flask
+from flask import Flask, jsonify
 from flasgger import swag_from, Swagger
 from core.game_generator import generate_game
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
+
+#https://flask-sqlalchemy.palletsprojects.com/en/2.x/quickstart/
 
 
 app = Flask(__name__)
@@ -17,6 +19,9 @@ class User(db.Model):
 
     def __repr__(self):
         return '<User %r>' % self.username
+    
+    def as_dict(self):
+        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
 
 
 class Action(db.Model):
@@ -31,17 +36,16 @@ class Action(db.Model):
 
 @app.route('/')
 def hello_world():
-    user = User.query.one()
-    if user:
-        return f'{user}'
+    user = User.query.first()
+    if not user:
+        u = User(username='admin')
+        db.session.add(u)
+        db.session.commit()
 
-    u = User(username='admin')
-    db.session.add(u)
-
-    db.session.commit()
+    user = User.query.first()
 
     print(user)
-    return f'{user}'
+    return jsonify(user.as_dict())
 
 
 @app.route('/generate_game', methods=['GET'])
