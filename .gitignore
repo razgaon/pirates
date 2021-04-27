@@ -13,4 +13,4 @@ build/
 .idea/
 docs/_build/
 .vscode
-*.sqlite
+/db.sqlite
