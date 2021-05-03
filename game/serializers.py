@@ -30,7 +30,8 @@ class TaskCommunicationSerializer(serializers.ModelSerializer):
     class Meta:
         model = TaskCommunication
         fields = ('game_id',
-                  'player_id',
+                  'speaker_player_id',
+                  'listener_player_id'
                   'task_archetype',
                   'task_name',
                   'text')

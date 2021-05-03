@@ -21,26 +21,35 @@ task_texts = {"button-toggle": "Toggle the {control}",
               "microphone-password": "Say the password into the {control}",
               "device-shake": "Shake the {control}!"}
 
+task_goals = {"button-toggle": [15, 30],
+                   "button-increment": [30, 45],
+                   "button-LED-toggle": [5, 8],
+                   "microphone-password": [6, 10],
+                   "device-shake": [2, 4]}
+
+archetype_ix = {"button-toggle": 0,
+                   "button-increment": 1,
+                   "button-LED-toggle": 2,
+                   "microphone-password": 3,
+                   "device-shake": 4}
+
 NUM_PLAYERS = 2
 
-
-class TaskNameViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint that allows users to be viewed or edited.
-    """
-    queryset = TaskName.objects.all()
-    serializer_class = TaskNameSerializer
-
-
-class GameViewSet(viewsets.ModelViewSet):
+class GamesViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows groups to be viewed or edited.
     """
     queryset = Game.objects.all()
     serializer_class = GameSerializer
 
+class TaskNameMappingsViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows users to be viewed or edited.
+    """
+    queryset = TaskName.objects.all()
+    serializer_class = TaskNameSerializer
 
-class TaskAssignmentViewSet(viewsets.ModelViewSet):
+class TaskCommunicationViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows groups to be viewed or edited.
     """
@@ -48,7 +57,7 @@ class TaskAssignmentViewSet(viewsets.ModelViewSet):
     serializer_class = TaskAssignmentSerializer
 
 
-class OutstandingViewSet(viewsets.ModelViewSet):
+class CurrentTasksViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows groups to be viewed or edited.
     """
@@ -63,24 +72,58 @@ class PlayerReady(APIView):
 
     def post(self, request, user_id, format=None):
         # First add the user.
-        user = user_id
-        data = {'game_id': "game1", 'player_id': user}
+        data = {'game_id': "game1", 'player_id': user_id}
         game_serializer = GameSerializer(data=data)
         if game_serializer.is_valid():
             game_serializer.save()
-        # now we also want to generate some task names for them
-        for archetype, possible_choices in task_archetypes.items():
-            current_in_use = TaskName.objects.filter(game_id="game1", task_archetype=archetype).all()
-            available = set(possible_choices) - set(current_in_use)
-            mapping = TaskName(game_id="game1", player_id=user, task_archetype=archetype,
-                               task_name=random.sample(available, 1)[0])
-            mapping.save()
-
-        # check if game has started!!!
+        # IF WE NOW HAVE THE COMPLETE GAME, WE'RE GOING TO DO A BUNCH OF STUFF
         ready_players = Game.objects.filter(game_id="game1")
         if len(ready_players) == NUM_PLAYERS:
-            Game.objects.filter(game_id="game1").update(score=0, timestamp=datetime.now())
-
+            local_mappings = {}
+            #first, lets generate name mappings
+            for archetype, name_options in task_archetypes.items():
+                rndm_options = random.sample(name_options, len(name_options))
+                rndm_options = rndm_options[:NUM_PLAYERS]
+                for i, player_obj in enumerate(ready_players):
+                    data = {'game_id': 'game1', 
+                            'player_id': player_obj.player_id, 
+                            'task_archetype': archetype, 
+                            'task_name': rndm_options[i]}
+                    taskmapping_serializer = TaskNameMappingsSerializer(data=data)
+                    taskmapping_serializer.save()
+                    local_mappings[player_obj.player_id] = (archetype, rndm_options[i])
+            #second, lets assign everyone tasks and communications
+            possible_tasks = list(task_archetypes.keys())
+            assigned_task_archetypes = [random.sample(possible_tasks, 1) for _ in range(NUM_PLAYERS)] 
+            order = random.sample([i for i in range(NUM_PLAYERS)], NUM_PLAYERS)
+            ts = datetime.now()
+            for i, player_obj in enumerate(ready_players):
+                #first, we assign the task to the person
+                data = {'game_id': 'game1', 
+                        'player_id': player_obj.player_id, 
+                        'task_archetype': local_mappings[player_obj.player_id][0], 
+                        'finished':False,
+                        'timestamp': ts}
+                currenttasks_serializer = CurrentTasksSerializer(data=data)
+                currenttasks_serializer.save()
+                #now, lets establish communication expectations
+                my_id = player_obj.player_id
+                target_player_order = order[order.index(i)+1 % NUM_PLAYERS]
+                target_player_id = ready_players[target_player_order].player_id
+                task_archetype = local_mappings[target_player_id][0]
+                task_name = local_mappings[target_player_id][1]
+                text = task_texts[task_archetype].format(control=task_name)
+                data = {'game_id': 'game1', 
+                        'speaker_player_id': my_id, 
+                        'listener_player_id': target_player_id, 
+                        'task_archetype': task_archetype, 
+                        'task_name': task_name,
+                        'text': text}
+                taskcomms_serializer = TaskCommunicationSerializer(data=data)
+                taskcomms_serializer.save()
+            #last, lets begin the game!
+            Game.objects.filter(game_id="game1").update(score=0, timestamp=ts)
+        
         return Response(f"user {user} is now ready", status=status.HTTP_200_OK)
 
 

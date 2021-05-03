@@ -25,7 +25,8 @@ class TaskCommunication(models.Model):
     Stores which player is displaying which task
     """
     game_id = models.TextField(null=False)
-    player_id = models.TextField(null=False)
+    speaker_player_id = models.TextField(null=False)
+    listener_player_id = models.TextField(null=False)
     task_archetype = models.TextField(null=False)
     task_name = models.TextField(null=False)
     text = models.TextField(null=False)
