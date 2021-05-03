@@ -19,17 +19,17 @@ task_archetypes = {"button-toggle": ['a-inator', 'b-inator', 'c-inator', 'd-inat
                    "microphone-password": ['l-inator', 'm-inator', 'n-inator', 'o-inator', 'p-inator'],
                    "device-shake": ['fee', 'fi', 'fo', 'fum']}
 
-task_texts = {"button-toggle": "Toggle the {control}",
-              "button_increment": "Press the {control}",
-              "button-LED-toggle": "Change the color of the {control}",
-              "microphone-password": "Say the password into the {control}",
-              "device-shake": "Shake the {control}!"}
+task_texts = {"button-toggle": "Toggle the {control} {num} times",
+              "button_increment": "Press the {control} {num} times",
+              "button-LED-toggle": "Change the color of the {control} {num} times",
+              "microphone-password": "Say the password into the {control} {num} times",
+              "device-shake": "Shake the {control} {num} times!"}
 
-task_goals = {"button-toggle": [15, 30],
-                   "button-increment": [30, 45],
-                   "button-LED-toggle": [5, 8],
-                   "microphone-password": [6, 10],
-                   "device-shake": [2, 4]}
+task_goals = {"button-toggle": [0, 2],
+                   "button-increment": [5, 15],
+                   "button-LED-toggle": [0, 3],
+                   "microphone-password": [1, 1],
+                   "device-shake": [1, 1]}
 
 NUM_PLAYERS = 2
 
@@ -87,16 +87,16 @@ class PlayerReady(APIView):
         # First add the user.
         user_id = request.POST.get("user_id")
         game_id = request.POST.get("game_id")
-        data = {'game_id': 'game1', 'player_id': user_id}
+        data = {'game_id': game_id, 'player_id': user_id}
         player = Games(**data)
         player.save()
         # IF WE NOW HAVE THE COMPLETE GAME, WE'RE GOING TO DO A BUNCH OF STUFF
-        ready_players = Games.objects.filter(game_id="game1")
+        ready_players = Games.objects.filter(game_id=game_id)
         if len(ready_players) == NUM_PLAYERS:
             ts = datetime.now()
             generate_round(ready_players, ts, game_id)
             #last, lets begin the game!
-            Games.objects.filter(game_id="game1").update(score=0, timestamp=ts, round_num=0)
+            Games.objects.filter(game_id=game_id).update(score=0, timestamp=ts, round_num=0)
         
         return Response(f"user {user_id} is now ready", status=status.HTTP_200_OK)
 
@@ -128,19 +128,19 @@ class TaskComplete(APIView):
         user_id = request.POST.get("user_id")
         game_id = request.POST.get("game_id")
         
-        CurrentTasks.objects.filter(game_id="game1", player_id=user_id).update(finished = True)
-        time_assigned = CurrentTasks.objects.values_list('timestamp', flat=True).filter(game_id="game1",player_id=user_id)[0]
-        goal = CurrentTasks.objects.values_list('goal', flat=True).filter(game_id="game1",player_id=user_id)[0]
-        score = ritaank_func(datetime.now(), time_assigned, goals)
+        CurrentTasks.objects.filter(game_id=game_id, player_id=user_id).update(finished=True)
+        time_assigned = CurrentTasks.objects.values_list('timestamp', flat=True).filter(game_id=game_id,player_id=user_id)[0]
+        goal = CurrentTasks.objects.values_list('goal', flat=True).filter(game_id=game_id,player_id=user_id)[0]
+        score = ritaank_func(datetime.now(), time_assigned, goal)
         #update score somewhere here pls ritaank
-        finished_tasks = Game.objects.filter(game_id="game1", finished = True)
+        finished_tasks = CurrentTasks.objects.filter(game_id=game_id, finished=True)
         if len(finished_tasks) == NUM_PLAYERS:
-            TaskNameMappings.objects.filter(game_id="game1").delete()
-            TaskCommunication.objects.filter(game_id="game1").delete()
-            CurrentTasks.objects.filter(game_id="game1").delete()
-            ready_players = Game.objects.filter(game_id=game_id).all()
+            TaskNameMappings.objects.filter(game_id=game_id).delete()
+            TaskCommunication.objects.filter(game_id=game_id).delete()
+            CurrentTasks.objects.filter(game_id=game_id).delete()
+            ready_players = Games.objects.filter(game_id=game_id).all()
             generate_round(ready_players, datetime.now(), game_id)
-            Games.objects.filter(game_id="game1").update(round_num=F('round_num')+1)
+            Games.objects.filter(game_id=game_id).update(round_num=F('round_num')+1)
         return Response(f"task for user {user_id} succesfully logged", status=status.HTTP_200_OK)
 
 
@@ -151,17 +151,20 @@ class GetNewRound(APIView):
     def get(self, request, format=None):
         user_id = request.GET.get("user_id")
         game_id = request.GET.get("game_id")
-        user_round_num = request.GET.get("round_num")
+        user_round_num = int(request.GET.get("round_num"))
+        assert user_round_num != None
         
         game_round_num = Games.objects.values_list('round_num', flat=True).filter(game_id=game_id)[0]
         assert game_id == "game1"
         response = {}
-        if user_round_num != game_round_num:
+        # assert 1==2, f"{user_round_num} \t\t {game_round_num} \t\t {type(user_round_num)} \t\t {type(game_round_num)}"
+        if user_round_num < game_round_num:
             # The game has reassigned tasks and moved on to next round, pass this to the ESP
             generate_esp_response(response, user_id, game_id)
             return Response(response)
         else:
             # The round is still in play, nothing to update
+            assert user_round_num == game_round_num
             response["status"] = False
             return Response(json.dumps(response))
 
@@ -173,7 +176,7 @@ def generate_round(ready_players, ts, game_id):
         rndm_options = random.sample(name_options, len(name_options))
         rndm_options = rndm_options[:NUM_PLAYERS]
         for i, player_obj in enumerate(ready_players):
-            data = {'game_id': 'game1', 
+            data = {'game_id': game_id, 
                     'player_id': player_obj.player_id, 
                     'task_archetype': archetype, 
                     'task_name': rndm_options[i]}
@@ -187,10 +190,11 @@ def generate_round(ready_players, ts, game_id):
     for i, player_obj in enumerate(ready_players):
         #first, we assign the task to the person
         arch = local_mappings[player_obj.player_id][0]
-        data = {'game_id': 'game1', 
+        goal = random.randint(task_goals[arch][0], task_goals[arch][1])
+        data = {'game_id': game_id, 
                 'player_id': player_obj.player_id, 
                 'task_archetype': arch, 
-                'goal': random.randint(task_goals[arch][0], task_goals[arch][1]),
+                'goal': goal,
                 'finished':False,
                 'timestamp': ts}
         curtask = CurrentTasks(**data)
@@ -206,8 +210,8 @@ def generate_round(ready_players, ts, game_id):
         target_player_id = ready_players[target_player_order].player_id
         task_archetype = local_mappings[target_player_id][0]
         task_name = local_mappings[target_player_id][1]
-        text = task_texts[task_archetype].format(control=task_name)
-        data = {'game_id': 'game1', 
+        text = task_texts[task_archetype].format(control=task_name, num=goal)
+        data = {'game_id': game_id, 
                 'speaker_player_id': my_id, 
                 'listener_player_id': target_player_id, 
                 'task_archetype': task_archetype, 
@@ -219,17 +223,17 @@ def generate_round(ready_players, ts, game_id):
 
 def generate_esp_response(response, user_id, game_id):
     response["status"] = True
-    response["round_num"] = Games.objects.values_list('round_num', flat=True).filter(game_id="game1")[0]
+    response["round_num"] = Games.objects.values_list('round_num', flat=True).filter(game_id=game_id)[0]
     response["controllers"] = {}
-    response["text"] = TaskCommunication.objects.values_list('text', flat=True).filter(game_id="game1",speaker_player_id=user_id)[0]
-    assigned_task = CurrentTasks.objects.filter(game_id="game1", player_id=user_id).first()
+    response["text"] = TaskCommunication.objects.values_list('text', flat=True).filter(game_id=game_id,speaker_player_id=user_id)[0]
+    assigned_task = CurrentTasks.objects.filter(game_id=game_id, player_id=user_id).first()
     required_ix = list(task_archetypes.keys()).index(assigned_task.task_archetype)
     ixs = set([i for i in range(len(task_archetypes.items()))]) - set([required_ix])
     valid_ixs = random.sample(list(ixs), 3) + [required_ix]
     gui_quadrant_ixs = {0, 1, 2, 3}
     for i, (archetype, name_options) in enumerate(task_archetypes.items()):
         response["controllers"][archetype] = {}
-        response["controllers"][archetype]["controller_name"] = TaskNameMappings.objects.values_list('task_name', flat=True).filter(game_id="game1",player_id=user_id,task_archetype=archetype)[0]
+        response["controllers"][archetype]["controller_name"] = TaskNameMappings.objects.values_list('task_name', flat=True).filter(game_id=game_id,player_id=user_id,task_archetype=archetype)[0]
         response["controllers"][archetype]["controller_goal"] = -1 if i != required_ix else assigned_task.goal
         response["controllers"][archetype]["number"] = set.pop(gui_quadrant_ixs) if i in valid_ixs else -1
 
