@@ -6,8 +6,9 @@ from django.db import models
 class Games(models.Model):
     game_id = models.TextField(null=False)
     player_id = models.TextField(unique=True, null=False)
-    score = models.IntegerField(default=None)
-    timestamp = models.DateTimeField(auto_now=False, default=None)
+    score = models.IntegerField(default=0, null=True)
+    round_num = models.IntegerField(default=0, null=True)
+    timestamp = models.DateTimeField(auto_now=False, default=None, null=True)
 
 
 class TaskNameMappings(models.Model):
@@ -39,5 +40,6 @@ class CurrentTasks(models.Model):
     game_id = models.TextField(null=False)
     player_id = models.TextField(null=False)
     task_archetype = models.TextField(null=False)
+    goal = models.IntegerField(null=False)
     finished = models.BooleanField(default=False, null=False)
     timestamp = models.TextField(null=False)

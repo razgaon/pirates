@@ -19,7 +19,7 @@ from rest_framework import routers
 from game import views
 
 router = routers.DefaultRouter()
-router.register(r'game', views.GameViewSet)
+router.register(r'game', views.GamesViewSet)
 
 # Wire up our API using automatic URL routing.
 # Additionally, we include login URLs for the browsable API.
@@ -27,9 +27,9 @@ urlpatterns = [
     path('', include(router.urls)),
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     path('admin/', admin.site.urls),
-    path('user_ready/<str:user_id>/', views.PlayerReady.as_view()),
-    path('check_start/<str:game_id>/<str:user_id>/', views.CheckStart.as_view()),
-    path('task_complete/<str:game_id>/<str:user_id>/', views.CheckStart.as_view()),
-    path('get_new_round/<str:game_id>/<str:user_id>/', views.CheckStart.as_view()),
-
+    path('user_ready/', views.PlayerReady.as_view()),
+    path('check_start/', views.CheckStart.as_view()),
+    path('task_complete/', views.TaskComplete.as_view()),
+    path('get_new_round/', views.GetNewRound.as_view()),
+    path('clear/', views.ClearGame.as_view())
 ]

@@ -2,19 +2,20 @@ from .models import *
 from rest_framework import serializers
 
 
-class GameSerializer(serializers.ModelSerializer):
+class GamesSerializer(serializers.ModelSerializer):
     class Meta:
         model = Games
         fields = ('game_id',
                   'player_id',
                   'score',
+                  'round_num',
                   'timestamp')
 
     def create(self, validated_data):
         """
         Create and return a new `Snippet` instance, given the validated data.
         """
-        return Game.objects.create(**validated_data)
+        return Games.objects.create(**validated_data)
 
 
 class TaskNameMappingsSerializer(serializers.ModelSerializer):
