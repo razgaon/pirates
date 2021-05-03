@@ -4,11 +4,11 @@ from rest_framework import serializers
 
 class GameSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Game
-        fields = ['game_id',
+        model = Games
+        fields = ('game_id',
                   'player_id',
                   'score',
-                  'timestamp', ]
+                  'timestamp')
 
     def create(self, validated_data):
         """
@@ -17,28 +17,30 @@ class GameSerializer(serializers.ModelSerializer):
         return Game.objects.create(**validated_data)
 
 
-class TaskNameSerializer(serializers.ModelSerializer):
+class TaskNameMappingsSerializer(serializers.ModelSerializer):
     class Meta:
-        model = TaskName
+        model = TaskNameMappings
         fields = ('game_id',
                   'player_id',
                   'task_archetype',
                   'task_name')
 
 
-class TaskAssignmentSerializer(serializers.ModelSerializer):
+class TaskCommunicationSerializer(serializers.ModelSerializer):
     class Meta:
-        model = TaskAssignment
+        model = TaskCommunication
         fields = ('game_id',
                   'player_id',
                   'task_archetype',
-                  'task_name')
+                  'task_name',
+                  'text')
 
 
-class OutstandingSerializer(serializers.ModelSerializer):
+class CurrentTasksSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Outstanding
+        model = CurrentTasks
         fields = ['game_id',
                   'player_id',
                   'task_archetype',
+                  'finished',
                   'timestamp']
