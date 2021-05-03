@@ -122,7 +122,7 @@ class PlayerReady(APIView):
             #last, lets begin the game!
             Game.objects.filter(game_id="game1").update(score=0, timestamp=ts)
         
-        return Response(f"user {user} is now ready", status=status.HTTP_200_OK)
+        return Response(f"user {user_id} is now ready", status=status.HTTP_200_OK)
 
 
 class CheckStart(APIView):
@@ -153,3 +153,13 @@ class CheckStart(APIView):
         else:
             response["status"] = False
             return Response(json.dumps(response))
+
+class TaskComplete(APIView):
+    """
+    Handles players logging a completed task
+    """
+    def post(self, request, user_id, format=None):
+        CurrentTasks.objects.filter(game_id="game1", player_id=user_id).update(finished = True)
+        time_assigned = CurrentTasks.objects.values_list('timestamp', flat=True).filter(game_id="game1",player_id=user_id)[0]
+        goal = CurrentTasks.objects.values_list('goal', flat=True).filter(game_id="game1",player_id=user_id)[0]
+        score = ritaank_func(datetime.now(), time_assigned, goals)

@@ -27,7 +27,9 @@ urlpatterns = [
     path('', include(router.urls)),
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     path('admin/', admin.site.urls),
-    path('user_ready/<int:user_id>/', views.PlayerReady.as_view()),
-    path('check_start/<str:game_id>/<int:user_id>/', views.CheckStart.as_view()),
+    path('user_ready/<str:user_id>/', views.PlayerReady.as_view()),
+    path('check_start/<str:game_id>/<str:user_id>/', views.CheckStart.as_view()),
+    path('task_complete/<str:game_id>/<str:user_id>/', views.CheckStart.as_view()),
+    path('get_new_round/<str:game_id>/<str:user_id>/', views.CheckStart.as_view()),
 
 ]
