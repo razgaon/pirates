@@ -1,3 +1,5 @@
+import random
+import json
 from datetime import datetime
 
 from rest_framework.response import Response
@@ -7,7 +9,7 @@ from .models import Game, Outstanding, TaskAssignment, TaskName
 from rest_framework import viewsets, status
 from rest_framework import permissions
 from .serializers import TaskNameSerializer, GameSerializer, TaskAssignmentSerializer, OutstandingSerializer
-import random
+
 
 task_archetypes = {"button-toggle": ['a-inator', 'b-inator', 'c-inator', 'd-inator'],
                    "button_increment": ['w-inator', 'x-inator', 'y-inator', 'z-inator'],
@@ -26,12 +28,6 @@ task_goals = {"button-toggle": [15, 30],
                    "button-LED-toggle": [5, 8],
                    "microphone-password": [6, 10],
                    "device-shake": [2, 4]}
-
-archetype_ix = {"button-toggle": 0,
-                   "button-increment": 1,
-                   "button-LED-toggle": 2,
-                   "microphone-password": 3,
-                   "device-shake": 4}
 
 NUM_PLAYERS = 2
 
@@ -99,9 +95,11 @@ class PlayerReady(APIView):
             ts = datetime.now()
             for i, player_obj in enumerate(ready_players):
                 #first, we assign the task to the person
+                arch = local_mappings[player_obj.player_id][0]
                 data = {'game_id': 'game1', 
                         'player_id': player_obj.player_id, 
-                        'task_archetype': local_mappings[player_obj.player_id][0], 
+                        'task_archetype': arch, 
+                        'goal': random.randint(task_goals[arch][0], task_goals[arch][1]),
                         'finished':False,
                         'timestamp': ts}
                 currenttasks_serializer = CurrentTasksSerializer(data=data)
@@ -132,33 +130,26 @@ class CheckStart(APIView):
     List all snippets, or create a new snippet.
     """
 
-    def post(self, request, game_id, user_id, format=None):
+    def get(self, request, game_id, user_id, format=None):
         assert game_id == "game1"
         # FIRST THING WE NEED TO DO: INSERT PLAYER INTO GAMESDB
         ready_players = Game.objects.filter(game_id=game_id).all()
+        response = {}
         if len(ready_players) == NUM_PLAYERS:
-            # if we're in here, we're ready to start the game... we can send stuff down now
-            mappings = TaskName.objects.filter(game_id="game1", player_id=user_id).all()
-
-            # get tasks that aren't assigned to the user (to be yelled)
-            potential_tasks = TaskName.objects.exclude(player_id=user_id).all()  # TODO: missing game1 filter, add here
-            # only assign tasks that haven't been assigned yet
-            used_ids = {el.player_id for el in TaskAssignment.objects.all()}
-            response = "READY;"
-            for el in potential_tasks:
-                if el.id not in used_ids:
-                    # then we assign, and break
-                    assignment = TaskAssignment(id=el.id, game_id="game1", player_id=user_id,
-                                                task_archetype=el.task_archetype,
-                                                task_name=el.task_name)
-                    assignment.save()
-
-                    task_text = task_texts[el.task_archetype].format(control=el.task_name)
-                    response += f"{task_text};"
-                    break
-
-            for el in mappings:
-                response += f"{el.task_archetype}:{el.task_name};"
+            response["status"] = True
+            response["controllers"] = {}
+            response["text"] = TaskCommunication.objects.values_list('text', flat=True).filter(game_id="game1",speaker_player_id=user_id)[0]
+            assigned_task = CurrentTasks.object.filter(game_id="game1", player_id=user_id)
+            required_ix = list(task_archetypes.items()).index(assigned_task.task_archetype)
+            ixs = set([i for i in range(len(task_archetypes.items()))]) - set([required_ix])
+            valid_ixs = random.sample(list(ixs), 3) + [required_ix]
+            gui_quadrant_ixs = {0, 1, 2, 3}
+            for i, archetype, name_options in enumerate(task_archetypes.items()):
+                response["controllers"][archetype] = {}
+                response["controllers"][archetype]["controller_name"] = TaskNameMappings.objects.values_list('task_name', flat=True).filter(game_id="game1",player_id=user_id,task_archetype=archetype)[0]
+                response["controllers"][archetype]["controller_goal"] = -1 if i != required_ix else assigned_task.goal
+                response["controllers"][archetype]["number"] = set.pop(gui_quadrant_ixs) if i in valid_ixs else -1
             return Response(response)
         else:
-            return Response("NOT READY")
+            response["status"] = False
+            return Response(json.dumps(response))
