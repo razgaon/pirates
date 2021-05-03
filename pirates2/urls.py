@@ -31,5 +31,6 @@ urlpatterns = [
     path('check_start/', views.CheckStart.as_view()),
     path('task_complete/', views.TaskComplete.as_view()),
     path('get_new_round/', views.GetNewRound.as_view()),
-    path('clear/', views.ClearGame.as_view())
+    path('clear/', views.ClearGame.as_view()),
+    path('score/', views.Score.as_view()),
 ]

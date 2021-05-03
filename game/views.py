@@ -8,9 +8,9 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .models import *
+from .serializers import *
 from rest_framework import viewsets, status
 from rest_framework import permissions
-from .serializers import GamesSerializer, TaskNameMappingsSerializer, TaskCommunicationSerializer, CurrentTasksSerializer
 
 task_archetypes = {"button-toggle": ['a-inator', 'b-inator', 'c-inator', 'd-inator'],
                    "button_increment": ['w-inator', 'x-inator', 'y-inator', 'z-inator'],
@@ -79,6 +79,22 @@ class ClearGame(APIView):
         Games.objects.filter(game_id=game_id).delete()
         return Response("data cleared")
 
+class Score(APIView):
+    """
+    Returns score of game
+    """
+
+    def get(self, request, format=None):
+        game_id = request.GET.get("game_id")
+        if game_id == None:
+            return Response("Please give game id")
+
+        game = Games.objects.filter(game_id=game_id).first()
+        if game == None:
+            return Response(f"There is no game recorded with id {game_id}")
+        else:
+            return Response(f"The score for game with id {game_id} is {game.score}")
+
 
 class PlayerReady(APIView):
     """
@@ -134,7 +150,7 @@ class TaskComplete(APIView):
         time_assigned = CurrentTasks.objects.values_list('timestamp', flat=True).filter(game_id=game_id,player_id=user_id)[0]
         goal = CurrentTasks.objects.values_list('goal', flat=True).filter(game_id=game_id,player_id=user_id)[0]
         score = ritaank_func(datetime.now(), time_assigned, goal)
-        #update score somewhere here pls ritaank
+        Games.objects.filter(game_id=game_id).update(score=score)
         finished_tasks = CurrentTasks.objects.filter(game_id=game_id, finished=True)
         if len(finished_tasks) == NUM_PLAYERS:
             TaskNameMappings.objects.filter(game_id=game_id).delete()
