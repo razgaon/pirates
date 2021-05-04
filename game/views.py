@@ -272,4 +272,5 @@ def score_fn(time_now, assign_time, goal, archetype):
     40 points: linear scaling of task difficulty based on goal and range, transformed into [20, 40]
     60 points: decay function based on speed to completion. instantaneous = 60 points. 1 minute = 30 points.
     """
+    assign_time = datetime.strptime(assign_time, '%d/%m/%y %H:%M:%S')
     return score_speed(time_now-assign_time) + score_difficulty(goal, archetype)
