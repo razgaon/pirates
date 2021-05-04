@@ -22,7 +22,7 @@ task_texts = {"button-toggle": "Toggle the {control} {num} times",
               "button_increment": "Press the {control} {num} times",
               "button-LED-toggle": "Change the color of the {control} {num} times",
               "microphone-password": "Say the password into the {control} {num} times",
-              "device-shake": "Shake the {control} {num} times!"}
+              "device-shake": "Shake the {control} {num} time!"}
 
 task_goals = {"button-toggle": [0, 2],
               "button-increment": [5, 15],
@@ -71,14 +71,19 @@ class ClearGame(APIView):
     """
 
     def get(self, request, format=None):
-        game_id = request.GET.get("game_id")
+        # game_id = request.GET.get("game_id")
         # assert game_id == "game1"
 
-        TaskNameMappings.objects.filter(game_id=game_id).delete()
-        TaskCommunication.objects.filter(game_id=game_id).delete()
-        CurrentTasks.objects.filter(game_id=game_id).delete()
-        Games.objects.filter(game_id=game_id).delete()
-        return Response("data cleared, but not really")
+        # TaskNameMappings.objects.filter(game_id=game_id).delete()
+        # TaskCommunication.objects.filter(game_id=game_id).delete()
+        # CurrentTasks.objects.filter(game_id=game_id).delete()
+        # Games.objects.filter(game_id=game_id).delete()
+
+        TaskNameMappings.objects.all().delete()
+        TaskCommunication.objects.all().delete()
+        CurrentTasks.objects.all().delete()
+        Games.objects.all().delete()
+        return Response("data cleared!")
 
 
 class Score(APIView):
@@ -149,14 +154,18 @@ class TaskComplete(APIView):
     def post(self, request, format=None):
         user_id = request.POST.get("user_id")
         game_id = request.POST.get("game_id")
-
+        current_task = CurrentTasks.objects.filter(game_id=game_id, player_id=user_id)
+        assert len(current_task) == 1 # A player can't have more than one task at a time
+        if current_task.first().finished:
+            return Response(f"task for user {user_id} had already been logged, no change", status=status.HTTP_200_OK)
         CurrentTasks.objects.filter(game_id=game_id, player_id=user_id).update(finished=True)
+        after_check = CurrentTasks.objects.filter(game_id=game_id, player_id=user_id).first().finished
         time_assigned = \
             CurrentTasks.objects.values_list('timestamp', flat=True).filter(game_id=game_id, player_id=user_id)[0]
         goal, archetype = \
-            CurrentTasks.objects.values_list('goal', 'archetype').filter(game_id=game_id, player_id=user_id)[0]
-        score = score_fn(datetime.now(), time_assigned, goal, archetype)
-        Games.objects.filter(game_id=game_id).update(score=score)
+            CurrentTasks.objects.values_list('goal', 'task_archetype').filter(game_id=game_id, player_id=user_id)[0]
+        add_score = score_fn(datetime.now(), time_assigned, goal, archetype)
+        Games.objects.filter(game_id=game_id).update(score=F('score') + add_score)
         finished_tasks = CurrentTasks.objects.filter(game_id=game_id, finished=True)
         if len(finished_tasks) == NUM_PLAYERS:
             TaskNameMappings.objects.filter(game_id=game_id).delete()
