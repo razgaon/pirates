@@ -77,7 +77,7 @@ class ClearGame(APIView):
         TaskCommunication.objects.filter(game_id=game_id).delete()
         CurrentTasks.objects.filter(game_id=game_id).delete()
         Games.objects.filter(game_id=game_id).delete()
-        return Response("data cleared")
+        return Response("data cleared, but not really")
 
 class Score(APIView):
     """
