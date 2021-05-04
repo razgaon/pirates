@@ -273,4 +273,4 @@ def score_fn(time_now, assign_time_str, goal, archetype):
     60 points: decay function based on speed to completion. instantaneous = 60 points. 1 minute = 30 points.
     """
     assign_time = datetime.strptime(assign_time_str, '%Y-%m-%d %H:%M:%S.%f')
-    return score_speed(int(time_now-assign_time)) + score_difficulty(goal, archetype)
+    return score_speed((time_now-assign_time).total_seconds()) + score_difficulty(goal, archetype)
