@@ -163,8 +163,8 @@ void post_ready_to_play(char *game_id, char *player_name, char *request_buffer, 
   char body[100];                                                                                //for body
   sprintf(body, "game_id=%s&user_id=%s", game_id, player_name);                                  //generate body
   int body_len = strlen(body);                                                                   //calculate body length (for header reporting)
-  sprintf(request_buffer, "POST http://608dev-2.net/sandbox/sc/team03/user_ready HTTP/1.1\r\n"); // TODO!!!!!
-  strcat(request_buffer, "Host: 608dev-2.net\r\n");
+  sprintf(request_buffer, "POST https://shipgroups.herokuapp.com/user_ready HTTP/1.1\r\n"); // TODO!!!!!
+  strcat(request_buffer, "Host: herokuapp.com\r\n");
   strcat(request_buffer, "Content-Type: application/x-www-form-urlencoded\r\n");
   sprintf(request_buffer + strlen(request_buffer), "Content-Length: %d\r\n", body_len); //append string formatted to end of request buffer
   strcat(request_buffer, "\r\n");                                                       //new line from header to body
@@ -177,8 +177,8 @@ void post_ready_to_play(char *game_id, char *player_name, char *request_buffer, 
 
 char *check_start(char *game_id, char *player_name, char *request_buffer, char *response, uint16_t response_size, uint16_t response_timeout)
 {
-  sprintf(request_buffer, "GET http://608dev-2.net/sandbox/sc/team03/check_start/?game_id=%s&user_id=%s HTTP/1.1\r\n", game_id, player_name); // TODO!!!!!
-  strcat(request_buffer, "Host: 608dev-2.net\r\n");
+  sprintf(request_buffer, "GET https://shipgroups.herokuapp.com/check_start/?game_id=%s&user_id=%s HTTP/1.1\r\n", game_id, player_name); // TODO!!!!!
+  strcat(request_buffer, "Host: herokuapp.com\r\n");
   strcat(request_buffer, "\r\n"); //new line
   Serial.println(request_buffer);
   do_http_request("608dev-2.net", request_buffer, response, response_size, response_timeout, true);
@@ -188,8 +188,8 @@ char *check_start(char *game_id, char *player_name, char *request_buffer, char *
 
 char *get_new_round(char *game_id, char *player_name, char *request_buffer, char *response, uint16_t response_size, uint16_t response_timeout)
 {
-  sprintf(request_buffer, "GET http://608dev-2.net/sandbox/sc/team03/get_new_round/?game_id=%s&user_id=%s&round_num=%d HTTP/1.1\r\n", game_id, player_name, round_num); // TODO!!!!!
-  strcat(request_buffer, "Host: 608dev-2.net\r\n");
+  sprintf(request_buffer, "GET https://shipgroups.herokuapp.com/get_new_round/?game_id=%s&user_id=%s&round_num=%d HTTP/1.1\r\n", game_id, player_name, round_num); // TODO!!!!!
+  strcat(request_buffer, "Host: herokuapp.com\r\n");
   strcat(request_buffer, "\r\n"); //new line
   Serial.println(request_buffer);
   do_http_request("608dev-2.net", request_buffer, response, response_size, response_timeout, true);
@@ -202,8 +202,8 @@ void post_completed_task(char *game_id, char *player_name, char *request_buffer,
   char body[100];                                                                                   //for body
   sprintf(body, "game_id=%s,player=%s", game_id, player_name);                                      //generate body
   int body_len = strlen(body);                                                                      //calculate body length (for header reporting)
-  sprintf(request_buffer, "POST http://608dev-2.net/sandbox/sc/team03/task_complete HTTP/1.1\r\n"); // TODO!!!!!
-  strcat(request_buffer, "Host: 608dev-2.net\r\n");
+  sprintf(request_buffer, "POST https://shipgroups.herokuapp.com/task_complete HTTP/1.1\r\n"); // TODO!!!!!
+  strcat(request_buffer, "Host: herokuapp.com\r\n");
   strcat(request_buffer, "Content-Type: application/x-www-form-urlencoded\r\n");
   sprintf(request_buffer + strlen(request_buffer), "Content-Length: %d\r\n", body_len); //append string formatted to end of request buffer
   strcat(request_buffer, "\r\n");                                                       //new line from header to body
