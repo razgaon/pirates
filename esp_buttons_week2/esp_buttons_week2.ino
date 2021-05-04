@@ -56,7 +56,7 @@ Button button4(PIN4); //button object!
 
 // Each player fills this in before run (in future will make user input)
 char *game_id = "game1";
-char *player_name = "diego";
+char *player_name = "ritaank";
 int round_num = 0;
 //char* json_response;
 
@@ -65,7 +65,7 @@ Button_Toggler toggler = Button_Toggler();
 Button_LED button_led = Button_LED();
 
 bool game_status;
-char *task;
+char *task_display;
 char *controllers_button_incrementer_controller_name;
 int controllers_button_incrementer_controller_goal;
 int controllers_button_incrementer_number;
@@ -163,25 +163,25 @@ void post_ready_to_play(char *game_id, char *player_name, char *request_buffer, 
   char body[100];                                                                           //for body
   sprintf(body, "game_id=%s&user_id=%s", game_id, player_name);                             //generate body
   int body_len = strlen(body);                                                              //calculate body length (for header reporting)
-  sprintf(request_buffer, "POST https://shipgroups.herokuapp.com/user_ready HTTP/1.1\r\n"); // TODO!!!!!
-  strcat(request_buffer, "Host: herokuapp.com\r\n");
+  sprintf(request_buffer, "POST https://shipgroups.herokuapp.com/user_ready/ HTTP/1.1\r\n"); // TODO!!!!!
+  strcat(request_buffer, "Host: shipgroups.herokuapp.com\r\n");
   strcat(request_buffer, "Content-Type: application/x-www-form-urlencoded\r\n");
   sprintf(request_buffer + strlen(request_buffer), "Content-Length: %d\r\n", body_len); //append string formatted to end of request buffer
   strcat(request_buffer, "\r\n");                                                       //new line from header to body
   strcat(request_buffer, body);                                                         //body
   strcat(request_buffer, "\r\n");                                                       //new line
   Serial.println(request_buffer);
-  do_http_request("herokuapp.com", request_buffer, response, response_size, response_timeout, true);
+  do_http_request("shipgroups.herokuapp.com", request_buffer, response, response_size, response_timeout, true);
   Serial.println(response); //viewable in Serial Terminal
 }
 
 char *check_start(char *game_id, char *player_name, char *request_buffer, char *response, uint16_t response_size, uint16_t response_timeout)
 {
   sprintf(request_buffer, "GET https://shipgroups.herokuapp.com/check_start/?game_id=%s&user_id=%s HTTP/1.1\r\n", game_id, player_name); // TODO!!!!!
-  strcat(request_buffer, "Host: herokuapp.com\r\n");
+  strcat(request_buffer, "Host: shipgroups.herokuapp.com\r\n");
   strcat(request_buffer, "\r\n"); //new line
   Serial.println(request_buffer);
-  do_http_request("herokuapp.com", request_buffer, response, response_size, response_timeout, true);
+  do_http_request("shipgroups.herokuapp.com", request_buffer, response, response_size, response_timeout, true);
   Serial.println(response); //viewable in Serial Terminal
   return response;
 }
@@ -189,10 +189,10 @@ char *check_start(char *game_id, char *player_name, char *request_buffer, char *
 char *get_new_round(char *game_id, char *player_name, char *request_buffer, char *response, uint16_t response_size, uint16_t response_timeout)
 {
   sprintf(request_buffer, "GET https://shipgroups.herokuapp.com/get_new_round/?game_id=%s&user_id=%s&round_num=%d HTTP/1.1\r\n", game_id, player_name, round_num); // TODO!!!!!
-  strcat(request_buffer, "Host: herokuapp.com\r\n");
+  strcat(request_buffer, "Host: shipgroups.herokuapp.com\r\n");
   strcat(request_buffer, "\r\n"); //new line
   Serial.println(request_buffer);
-  do_http_request("herokuapp.com", request_buffer, response, response_size, response_timeout, true);
+  do_http_request("shipgroups.herokuapp.com", request_buffer, response, response_size, response_timeout, true);
   Serial.println(response); //viewable in Serial Terminal
   return response;
 }
@@ -202,8 +202,8 @@ void post_completed_task(char *game_id, char *player_name, char *request_buffer,
   char body[100];                                                                              //for body
   sprintf(body, "game_id=%s,player=%s", game_id, player_name);                                 //generate body
   int body_len = strlen(body);                                                                 //calculate body length (for header reporting)
-  sprintf(request_buffer, "POST https://shipgroups.herokuapp.com/task_complete HTTP/1.1\r\n"); // TODO!!!!!
-  strcat(request_buffer, "Host: herokuapp.com\r\n");
+  sprintf(request_buffer, "POST https://shipgroups.herokuapp.com/task_complete/ HTTP/1.1\r\n"); // TODO!!!!!
+  strcat(request_buffer, "Host: shipgroups.herokuapp.com\r\n");
   strcat(request_buffer, "Content-Type: application/x-www-form-urlencoded\r\n");
   sprintf(request_buffer + strlen(request_buffer), "Content-Length: %d\r\n", body_len); //append string formatted to end of request buffer
   strcat(request_buffer, "\r\n");                                                       //new line from header to body
@@ -211,7 +211,7 @@ void post_completed_task(char *game_id, char *player_name, char *request_buffer,
   strcat(request_buffer, "\r\n");                                                       //new line
   Serial.println(request_buffer);
 
-  do_http_request("herokuapp.com", request_buffer, response, response_size, response_timeout, true);
+  do_http_request("shipgroups.herokuapp.com", request_buffer, response, response_size, response_timeout, true);
   Serial.println(response); //viewable in Serial Terminal
 }
 
@@ -291,7 +291,8 @@ void setup()
   if (game_status)
   {
     round_started = true;
-    task = doc["task"]; // "Increment the scadoodle to 10"
+    const char* task = doc["task"]; // "Increment the scadoodle to 10"
+    task_display = (char*)task;
     JsonObject controllers = doc["controllers"];
 
     JsonObject controllers_button_incrementer = controllers["button_incrementer"];
@@ -387,7 +388,7 @@ void setup()
     game_status = doc["status"]; // true
     if (game_status)
     {
-      task = doc["task"]; // "Increment the scadoodle to 10"
+      const char* task = doc["task"]; // "Increment the scadoodle to 10"
       JsonObject controllers = doc["controllers"];
 
       JsonObject controllers_button_incrementer = controllers["button_incrementer"];
@@ -498,7 +499,8 @@ void loop()
 
     // TODO - for now we are only doing 1 round so no reinitialization of the controllers and tasks etc
     game_status = doc["status"];  // true
-    task = doc["task"];           // "Increment the scadoodle to 10"
+    const char* task = doc["task"];           // "Increment the scadoodle to 10"
+    task_display = (char*)task;
     round_num = doc["round_num"]; // reound number
     JsonObject controllers = doc["controllers"];
 
@@ -540,7 +542,7 @@ void loop()
       Serial.println("SOMETHING WAS UPDATED!");
       tft.setCursor(0, 0, 1);
       tft.fillScreen(TFT_BLACK);
-      tft.println(task);
+      tft.println(task_display);
       tft.println("---------------------");
       tft.println(incrementer.get_name());
 
