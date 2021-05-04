@@ -158,7 +158,7 @@ class TaskComplete(APIView):
         user_id = request.POST.get("user_id")
         game_id = request.POST.get("game_id")
         current_task = CurrentTasks.objects.filter(game_id=game_id, player_id=user_id)
-        assert len(current_task) == 1 # A player can't have more than one task at a time
+        assert len(current_task) == 1, f"hello, {current_task} \n {current_task.first()} \n {len(current_task)}" # A player can't have more than one task at a time
         if current_task.first().finished:
             return Response(f"task for user {user_id} had already been logged, no change", status=status.HTTP_200_OK)
         CurrentTasks.objects.filter(game_id=game_id, player_id=user_id).update(finished=True)
