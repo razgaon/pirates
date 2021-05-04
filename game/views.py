@@ -266,11 +266,11 @@ def score_difficulty(goal, archetype):
         archetype_max = task_goals[archetype][1]
         return int(20 + 20*goal/archetype_max)
 
-def score_fn(time_now, assign_time, goal, archetype):
+def score_fn(time_now, assign_time_str, goal, archetype):
     """
     Score breakdown: maximum 100 points
     40 points: linear scaling of task difficulty based on goal and range, transformed into [20, 40]
     60 points: decay function based on speed to completion. instantaneous = 60 points. 1 minute = 30 points.
     """
-    assign_time = datetime.strptime(assign_time, '%d/%m/%y %H:%M:%S')
+    assign_time = datetime.strptime(assign_time_str, '%Y-%m-%d %H:%M:%S.%f')
     return score_speed(time_now-assign_time) + score_difficulty(goal, archetype)
