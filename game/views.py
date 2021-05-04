@@ -277,8 +277,8 @@ def fill_esp_response(response, user_id, game_id):
     assigned_task = CurrentTasks.objects.filter(game_id=game_id, player_id=user_id).first()
     required_ix = list(task_archetypes.keys()).index(assigned_task.task_archetype)
     ixs = set([i for i in range(len(task_archetypes.items()))]) - set([required_ix])
-    valid_ixs = random.sample(list(ixs), 3) + [required_ix]
-    gui_quadrant_ixs = {0, 1, 2, 3}
+    valid_ixs = random.sample(list(ixs), 2) + [required_ix]
+    gui_quadrant_ixs = {0, 1, 2 }
     for i, (archetype, name_options) in enumerate(task_archetypes.items()):
         response["controllers"][archetype] = {}
         response["controllers"][archetype]["controller_name"] = \
