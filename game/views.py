@@ -14,21 +14,21 @@ from rest_framework import permissions
 
 task_archetypes = {"button-toggle": ['a-inator', 'b-inator', 'c-inator', 'd-inator'],
                    "button_increment": ['w-inator', 'x-inator', 'y-inator', 'z-inator'],
-                   "button-LED-toggle": ['1-inator', '2-inator', '3-inator', '4-inator'],
-                   "microphone-password": ['l-inator', 'm-inator', 'n-inator', 'o-inator', 'p-inator'],
-                   "device-shake": ['fee', 'fi', 'fo', 'fum']}
+                   "button-LED-toggle": ['1-inator', '2-inator', '3-inator', '4-inator'], }
+                #    "microphone-password": ['l-inator', 'm-inator', 'n-inator', 'o-inator', 'p-inator'],
+                #    "device-shake": ['fee', 'fi', 'fo', 'fum']}
 
 task_texts = {"button-toggle": "Toggle the {control} {num} times",
               "button_increment": "Press the {control} {num} times",
-              "button-LED-toggle": "Change the color of the {control} {num} times",
-              "microphone-password": "Say the password into the {control} {num} times",
-              "device-shake": "Shake the {control} {num} time!"}
+              "button-LED-toggle": "Change the color of the {control} {num} times", }
+            #   "microphone-password": "Say the password into the {control} {num} times",
+            #   "device-shake": "Shake the {control} {num} time!"}
 
 task_goals = {"button-toggle": [0, 2],
               "button-increment": [5, 15],
-              "button-LED-toggle": [0, 3],
-              "microphone-password": [1, 1],
-              "device-shake": [1, 1]}
+              "button-LED-toggle": [0, 3], }
+            #   "microphone-password": [1, 1],
+            #   "device-shake": [1, 1]}
 
 NUM_PLAYERS = 2
 
@@ -139,7 +139,7 @@ class CheckStart(APIView):
         ready_players = Games.objects.filter(game_id=game_id).all()
         response = {}
         if len(ready_players) == NUM_PLAYERS:
-            generate_esp_response(response, user_id, game_id)
+            fill_esp_response(response, user_id, game_id)
             return Response(response)
         else:
             response["status"] = False
@@ -194,7 +194,7 @@ class GetNewRound(APIView):
         # assert 1==2, f"{user_round_num} \t\t {game_round_num} \t\t {type(user_round_num)} \t\t {type(game_round_num)}"
         if user_round_num < game_round_num:
             # The game has reassigned tasks and moved on to next round, pass this to the ESP
-            generate_esp_response(response, user_id, game_id)
+            fill_esp_response(response, user_id, game_id)
             return Response(response)
         else:
             # The round is still in play, nothing to update
@@ -214,6 +214,9 @@ class GenerateGameCode(APIView):
 
 
 def generate_round(ready_players, ts, game_id):
+    """
+    Actually GENERATES a new round. Makes assignments, saves to dbs
+    """
     local_mappings = {}
     # first, lets generate name mappings
     for archetype, name_options in task_archetypes.items():
@@ -265,7 +268,10 @@ def generate_round(ready_players, ts, game_id):
         taskcomm.save()
 
 
-def generate_esp_response(response, user_id, game_id):
+def fill_esp_response(response, user_id, game_id):
+    """
+    Uses pre-GENERATED data to FILL up a JSON response in the way the ESP likes it
+    """
     response["status"] = True
     response["round_num"] = Games.objects.values_list('round_num', flat=True).filter(game_id=game_id)[0]
     response["controllers"] = {}

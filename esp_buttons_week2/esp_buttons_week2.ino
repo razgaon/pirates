@@ -42,7 +42,7 @@ char response[OUT_BUFFER_SIZE]; //char array buffer to hold HTTP request
 
 // other
 uint32_t primary_timer;
-uint32_t LOOP_INTERVAL = 5000;
+uint32_t LOOP_INTERVAL = 10000;
 bool prev_incrementer;
 bool prev_toggler;
 bool prev_led;
