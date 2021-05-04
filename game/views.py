@@ -155,13 +155,13 @@ class TaskComplete(APIView):
     """
 
     def post(self, request, format=None):
-        print(request)
+        # print(request)
         user_id = request.POST.get("user_id")
         game_id = request.POST.get("game_id")
-        print(f"{user_id} \t {type(user_id)}")
-        print(f"{game_id} \t {type(game_id)}")
+        # print(f"{user_id} \t {type(user_id)}")
+        # print(f"{game_id} \t {type(game_id)}")
         current_task = CurrentTasks.objects.filter(game_id=game_id, player_id=user_id)
-        print(f"hello, {current_task} \n {current_task.first()} \n {len(current_task)}")
+        # print(f"hello, {current_task} \n {current_task.first()} \n {len(current_task)}")
         assert len(current_task) == 1 # A player can't have more than one task at a time
         if current_task.first().finished:
             return Response(f"task for user {user_id} had already been logged, no change", status=status.HTTP_200_OK)

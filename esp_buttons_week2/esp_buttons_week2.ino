@@ -204,7 +204,7 @@ char *get_new_round(char *game_id, char *player_name, int round_num, char *reque
 void post_completed_task(char *game_id, char *player_name, char *request_buffer, char *response, uint16_t response_size, uint16_t response_timeout)
 {
   char body[100];                                                                              //for body
-  sprintf(body, "game_id=%s,user_id=%s", game_id, player_name);                                 //generate body
+  sprintf(body, "game_id=%s&user_id=%s", game_id, player_name);                                 //generate body
   int body_len = strlen(body);                                                                 //calculate body length (for header reporting)
   sprintf(request_buffer, "POST https://shipgroups.herokuapp.com/task_complete/ HTTP/1.1\r\n"); // TODO!!!!!
   strcat(request_buffer, "Host: shipgroups.herokuapp.com\r\n");
