@@ -33,4 +33,5 @@ urlpatterns = [
     path('get_new_round/', views.GetNewRound.as_view()),
     path('clear/', views.ClearGame.as_view()),
     path('score/', views.Score.as_view()),
+    path('get_game_code/', views.GenerateGameCode.as_view()),
 ]
