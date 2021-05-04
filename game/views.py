@@ -148,8 +148,8 @@ class TaskComplete(APIView):
 
         CurrentTasks.objects.filter(game_id=game_id, player_id=user_id).update(finished=True)
         time_assigned = CurrentTasks.objects.values_list('timestamp', flat=True).filter(game_id=game_id,player_id=user_id)[0]
-        goal = CurrentTasks.objects.values_list('goal', flat=True).filter(game_id=game_id,player_id=user_id)[0]
-        score = ritaank_func(datetime.now(), time_assigned, goal)
+        goal, archetype = CurrentTasks.objects.values_list('goal', 'archetype').filter(game_id=game_id,player_id=user_id)[0]
+        score = score_fn(datetime.now(), time_assigned, goal, archetype)
         Games.objects.filter(game_id=game_id).update(score=score)
         finished_tasks = CurrentTasks.objects.filter(game_id=game_id, finished=True)
         if len(finished_tasks) == NUM_PLAYERS:
@@ -255,6 +255,21 @@ def generate_esp_response(response, user_id, game_id):
         response["controllers"][archetype]["controller_goal"] = -1 if i != required_ix else assigned_task.goal
         response["controllers"][archetype]["number"] = set.pop(gui_quadrant_ixs) if i in valid_ixs else -1
 
+def score_speed(time_diff):
+    return int(60*(19/20)**time_diff)
 
-def ritaank_func(cur, ass, goal):
-    return 1
+def score_difficulty(goal, archetype):
+    # We give half points to the button LED toggle always -- the difficulty is the same
+    if archetype == "button-LED-toggle":
+        return 30
+    else:
+        archetype_max = task_goals[archetype][1]
+        return int(20 + 20*goal/archetype_max)
+
+def score_fn(time_now, assign_time, goal, archetype):
+    """
+    Score breakdown: maximum 100 points
+    40 points: linear scaling of task difficulty based on goal and range, transformed into [20, 40]
+    60 points: decay function based on speed to completion. instantaneous = 60 points. 1 minute = 30 points.
+    """
+    return score_speed(time_now-assign_time) + score_difficulty(goal, archetype)
