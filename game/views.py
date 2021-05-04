@@ -218,7 +218,7 @@ def generate_round(ready_players, ts, game_id):
     """
     Actually GENERATES a new round. Makes assignments, saves to dbs
     """
-    local_mappings = {}
+    local_mappings = {k.player_id:{} for k in ready_players}
     # first, lets generate name mappings
     for archetype, name_options in task_archetypes.items():
         rndm_options = random.sample(name_options, len(name_options))
@@ -230,14 +230,14 @@ def generate_round(ready_players, ts, game_id):
                     'task_name': rndm_options[i]}
             mapping = TaskNameMappings(**data)
             mapping.save()
-            local_mappings[player_obj.player_id] = (archetype, rndm_options[i])
+            local_mappings[player_obj.player_id][archetype] = rndm_options[i]
     # second, lets assign everyone tasks and communications
     possible_tasks = list(task_archetypes.keys())
-    assigned_task_archetypes = [random.sample(possible_tasks, 1) for _ in range(NUM_PLAYERS)]
+    assigned_task_archetypes = [random.sample(possible_tasks, 1)[0] for _ in range(NUM_PLAYERS)]
     order = random.sample([i for i in range(NUM_PLAYERS)], NUM_PLAYERS)
     for i, player_obj in enumerate(ready_players):
         # first, we assign the task to the person
-        arch = local_mappings[player_obj.player_id][0]
+        arch = assigned_task_archetypes[i]
         goal = random.randint(task_goals[arch][0], task_goals[arch][1])
         data = {'game_id': game_id,
                 'player_id': player_obj.player_id,
@@ -252,9 +252,8 @@ def generate_round(ready_players, ts, game_id):
         my_id = player_obj.player_id
         target_player_order = order[(order.index(i) + 1) % len(order)]
         target_player_id = ready_players[target_player_order].player_id
-        target_player_goal = CurrentTasks.objects.values_list('goal', flat=True).filter(game_id=game_id, player_id=target_player_id)[0]
-        task_archetype = local_mappings[target_player_id][0]
-        task_name = local_mappings[target_player_id][1]
+        target_player_goal, task_archetype = CurrentTasks.objects.values_list('goal', 'task_archetype').filter(game_id=game_id, player_id=target_player_id)[0]
+        task_name = local_mappings[target_player_id][task_archetype]
         text = task_texts[task_archetype].format(control=task_name, num=target_player_goal)
         data = {'game_id': game_id,
                 'speaker_player_id': my_id,
