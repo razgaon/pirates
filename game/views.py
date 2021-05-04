@@ -12,23 +12,23 @@ from .serializers import *
 from rest_framework import viewsets, status
 from rest_framework import permissions
 
-task_archetypes = {"button-toggle": ['a-inator', 'b-inator', 'c-inator', 'd-inator'],
-                   "button-LED-toggle": ['1-inator', '2-inator', '3-inator', '4-inator'],
-                   "button_increment": ['w-inator', 'x-inator', 'y-inator', 'z-inator'],
+task_archetypes = {"button_toggler": ['a-inator', 'b-inator', 'c-inator', 'd-inator'],
+                   "button_led": ['1-inator', '2-inator', '3-inator', '4-inator'],
+                   "button_incrementer": ['w-inator', 'x-inator', 'y-inator', 'z-inator'],
                     }
                 #    "microphone-password": ['l-inator', 'm-inator', 'n-inator', 'o-inator', 'p-inator'],
                 #    "device-shake": ['fee', 'fi', 'fo', 'fum']}
 
-task_texts = {"button-toggle": "Toggle the {control} {num} times",
-              "button-LED-toggle": "Change the color of the {control} to  {num}",
-              "button_increment": "Press the {control} {num} times",
+task_texts = {"button_toggler": "Toggle the {control} {num} times",
+              "button_led": "Change the color of the {control} to {num}",
+              "button_incrementer": "Press the {control} {num} times",
                }
             #   "microphone-password": "Say the password into the {control} {num} times",
             #   "device-shake": "Shake the {control} {num} time!"}
 
-task_goals = {"button-toggle": [0, 2],
-              "button-LED-toggle": [0, 3],
-              "button-increment": [5, 15],
+task_goals = {"button_toggler": [0, 2],
+              "button_led": [0, 3],
+              "button_incrementer": [5, 15],
                }
             #   "microphone-password": [1, 1],
             #   "device-shake": [1, 1]}

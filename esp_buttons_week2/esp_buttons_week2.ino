@@ -501,7 +501,7 @@ void loop()
     game_status = doc["status"];  // true
     const char* task = doc["task"];           // "Increment the scadoodle to 10"
     task_display = (char*)task;
-    round_num = doc["round_num"]; // reound number
+    round_num = doc["round_num"]; // round number
     JsonObject controllers = doc["controllers"];
 
     JsonObject controllers_button_incrementer = controllers["button_incrementer"];
