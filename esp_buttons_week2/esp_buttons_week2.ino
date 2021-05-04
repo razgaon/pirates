@@ -160,9 +160,9 @@ void do_http_request(char *host, char *request, char *response, uint16_t respons
 
 void post_ready_to_play(char *game_id, char *player_name, char *request_buffer, char *response, uint16_t response_size, uint16_t response_timeout)
 {
-  char body[100];                                                                                //for body
-  sprintf(body, "game_id=%s&user_id=%s", game_id, player_name);                                  //generate body
-  int body_len = strlen(body);                                                                   //calculate body length (for header reporting)
+  char body[100];                                                                           //for body
+  sprintf(body, "game_id=%s&user_id=%s", game_id, player_name);                             //generate body
+  int body_len = strlen(body);                                                              //calculate body length (for header reporting)
   sprintf(request_buffer, "POST https://shipgroups.herokuapp.com/user_ready HTTP/1.1\r\n"); // TODO!!!!!
   strcat(request_buffer, "Host: herokuapp.com\r\n");
   strcat(request_buffer, "Content-Type: application/x-www-form-urlencoded\r\n");
@@ -171,7 +171,7 @@ void post_ready_to_play(char *game_id, char *player_name, char *request_buffer, 
   strcat(request_buffer, body);                                                         //body
   strcat(request_buffer, "\r\n");                                                       //new line
   Serial.println(request_buffer);
-  do_http_request("608dev-2.net", request_buffer, response, response_size, response_timeout, true);
+  do_http_request("herokuapp.com", request_buffer, response, response_size, response_timeout, true);
   Serial.println(response); //viewable in Serial Terminal
 }
 
@@ -181,7 +181,7 @@ char *check_start(char *game_id, char *player_name, char *request_buffer, char *
   strcat(request_buffer, "Host: herokuapp.com\r\n");
   strcat(request_buffer, "\r\n"); //new line
   Serial.println(request_buffer);
-  do_http_request("608dev-2.net", request_buffer, response, response_size, response_timeout, true);
+  do_http_request("herokuapp.com", request_buffer, response, response_size, response_timeout, true);
   Serial.println(response); //viewable in Serial Terminal
   return response;
 }
@@ -192,16 +192,16 @@ char *get_new_round(char *game_id, char *player_name, char *request_buffer, char
   strcat(request_buffer, "Host: herokuapp.com\r\n");
   strcat(request_buffer, "\r\n"); //new line
   Serial.println(request_buffer);
-  do_http_request("608dev-2.net", request_buffer, response, response_size, response_timeout, true);
+  do_http_request("herokuapp.com", request_buffer, response, response_size, response_timeout, true);
   Serial.println(response); //viewable in Serial Terminal
   return response;
 }
 
 void post_completed_task(char *game_id, char *player_name, char *request_buffer, char *response, uint16_t response_size, uint16_t response_timeout)
 {
-  char body[100];                                                                                   //for body
-  sprintf(body, "game_id=%s,player=%s", game_id, player_name);                                      //generate body
-  int body_len = strlen(body);                                                                      //calculate body length (for header reporting)
+  char body[100];                                                                              //for body
+  sprintf(body, "game_id=%s,player=%s", game_id, player_name);                                 //generate body
+  int body_len = strlen(body);                                                                 //calculate body length (for header reporting)
   sprintf(request_buffer, "POST https://shipgroups.herokuapp.com/task_complete HTTP/1.1\r\n"); // TODO!!!!!
   strcat(request_buffer, "Host: herokuapp.com\r\n");
   strcat(request_buffer, "Content-Type: application/x-www-form-urlencoded\r\n");
@@ -211,7 +211,7 @@ void post_completed_task(char *game_id, char *player_name, char *request_buffer,
   strcat(request_buffer, "\r\n");                                                       //new line
   Serial.println(request_buffer);
 
-  do_http_request("608dev-2.net", request_buffer, response, response_size, response_timeout, true);
+  do_http_request("herokuapp.com", request_buffer, response, response_size, response_timeout, true);
   Serial.println(response); //viewable in Serial Terminal
 }
 
