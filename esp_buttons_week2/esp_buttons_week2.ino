@@ -16,15 +16,15 @@
 TFT_eSPI tft = TFT_eSPI();
 const int SCREEN_HEIGHT = 160;
 const int SCREEN_WIDTH = 128;
-const int PIN1 = 5;
-const int PIN2 = 12;
-const int PIN3 = 13;
-const int PIN4 = 32;
+const int PIN1 = 0;
+const int PIN2 = 19;
+const int PIN3 = 5;
+const int PIN4 = 13;
 
 // LED constants
-const int R_PIN = 14;
-const int G_PIN = 19;
-const int B_PIN = 0;
+const int R_PIN = 27;
+const int G_PIN = 33;
+const int B_PIN = 32;
 const uint32_t PWM_CHANNEL_R = 0; //hardware pwm channel
 const uint32_t PWM_CHANNEL_G = 1; //hardware pwm channel
 const uint32_t PWM_CHANNEL_B = 2; //hardware pwm channel
@@ -56,7 +56,7 @@ Button button4(PIN4); //button object!
 
 // Each player fills this in before run (in future will make user input)
 char *game_id = "game1";
-char *player_name = "Testuser1";
+char *player_name = "diego";
 int round_num = 0;
 //char* json_response;
 
