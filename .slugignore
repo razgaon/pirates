@@ -1,0 +1,16 @@
+.env
+.flaskenv
+*.pyc
+*.pyo
+venv/
+venv*
+dist/
+build/
+
+.tox/
+.cache/
+.pytest_cache/
+.idea/
+docs/_build/
+.vscode
+/db.sqlite
