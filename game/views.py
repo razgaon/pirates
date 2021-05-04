@@ -148,7 +148,7 @@ class TaskComplete(APIView):
 
         CurrentTasks.objects.filter(game_id=game_id, player_id=user_id).update(finished=True)
         time_assigned = CurrentTasks.objects.values_list('timestamp', flat=True).filter(game_id=game_id,player_id=user_id)[0]
-        goal, archetype = CurrentTasks.objects.values_list('goal', 'archetype').filter(game_id=game_id,player_id=user_id)[0]
+        goal, archetype = CurrentTasks.objects.values_list('goal', 'task_archetype').filter(game_id=game_id,player_id=user_id)[0]
         score = score_fn(datetime.now(), time_assigned, goal, archetype)
         Games.objects.filter(game_id=game_id).update(score=score)
         finished_tasks = CurrentTasks.objects.filter(game_id=game_id, finished=True)
