@@ -138,7 +138,6 @@ class CheckStart(APIView):
         user_id = request.GET.get("user_id")
         game_id = request.GET.get("game_id")
 
-        assert game_id == "game1"
         ready_players = Games.objects.filter(game_id=game_id).all()
         response = {}
         if len(ready_players) == NUM_PLAYERS:
@@ -155,13 +154,9 @@ class TaskComplete(APIView):
     """
 
     def post(self, request, format=None):
-        # print(request)
         user_id = request.POST.get("user_id")
         game_id = request.POST.get("game_id")
-        # print(f"{user_id} \t {type(user_id)}")
-        # print(f"{game_id} \t {type(game_id)}")
         current_task = CurrentTasks.objects.filter(game_id=game_id, player_id=user_id)
-        # print(f"hello, {current_task} \n {current_task.first()} \n {len(current_task)}")
         assert len(current_task) == 1 # A player can't have more than one task at a time
         if current_task.first().finished:
             return Response(f"task for user {user_id} had already been logged, no change", status=status.HTTP_200_OK)
@@ -196,7 +191,6 @@ class GetNewRound(APIView):
         assert user_round_num != None
 
         game_round_num = Games.objects.values_list('round_num', flat=True).filter(game_id=game_id)[0]
-        assert game_id == "game1"
         response = {}
         # assert 1==2, f"{user_round_num} \t\t {game_round_num} \t\t {type(user_round_num)} \t\t {type(game_round_num)}"
         if user_round_num < game_round_num:
@@ -253,18 +247,15 @@ def generate_round(ready_players, ts, game_id):
                 'timestamp': ts}
         curtask = CurrentTasks(**data)
         curtask.save()
+    for i, player_obj in enumerate(ready_players):
         # now, lets establish communication expectations
         my_id = player_obj.player_id
-        # print(order, i, order.index(i))
-        try:
-            target_player_order = order[(order.index(i) + 1) % len(order)]
-        except IndexError:
-            print((order.index(i) + 1) % len(order))
-            raise AssertionError
+        target_player_order = order[(order.index(i) + 1) % len(order)]
         target_player_id = ready_players[target_player_order].player_id
+        target_player_goal = CurrentTasks.objects.values_list('goal', flat=True).filter(game_id=game_id, player_id=target_player_id)[0]
         task_archetype = local_mappings[target_player_id][0]
         task_name = local_mappings[target_player_id][1]
-        text = task_texts[task_archetype].format(control=task_name, num=goal)
+        text = task_texts[task_archetype].format(control=task_name, num=target_player_goal)
         data = {'game_id': game_id,
                 'speaker_player_id': my_id,
                 'listener_player_id': target_player_id,
@@ -287,8 +278,8 @@ def fill_esp_response(response, user_id, game_id):
     assigned_task = CurrentTasks.objects.filter(game_id=game_id, player_id=user_id).first()
     required_ix = list(task_archetypes.keys()).index(assigned_task.task_archetype)
     ixs = set([i for i in range(len(task_archetypes.items()))]) - set([required_ix])
-    valid_ixs = random.sample(list(ixs), 2) + [required_ix]
-    gui_quadrant_ixs = {0, 1, 2 }
+    valid_ixs = random.sample(list(ixs), 3) + [required_ix]
+    gui_quadrant_ixs = {0, 1, 2, 3}
     for i, (archetype, name_options) in enumerate(task_archetypes.items()):
         response["controllers"][archetype] = {}
         response["controllers"][archetype]["controller_name"] = \
