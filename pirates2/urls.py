@@ -13,13 +13,27 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+from django.conf.urls import url
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework import routers
 from game import views
+from rest_framework import permissions
+from drf_yasg.views import get_schema_view
+from drf_yasg import openapi
 
 router = routers.DefaultRouter()
 router.register(r'game', views.GamesViewSet)
+
+schema_view = get_schema_view(
+    openapi.Info(
+        title="Pirates API",
+        default_version='v1',
+        description="This is the documentation of the pirates api.",
+    ),
+    public=True,
+    permission_classes=(permissions.AllowAny,),
+)
 
 # Wire up our API using automatic URL routing.
 # Additionally, we include login URLs for the browsable API.
@@ -34,4 +48,8 @@ urlpatterns = [
     path('clear/', views.ClearGame.as_view()),
     path('score/', views.Score.as_view()),
     path('get_game_code/', views.GenerateGameCode.as_view()),
+    path('start_game/', views.StartGame.as_view()),
+    url(r'^swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
+    url(r'^swagger/$', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
+    url(r'^redoc/$', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
 ]
