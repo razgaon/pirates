@@ -82,8 +82,6 @@ class StartGame(APIView):
 
     def post(self, request, format=None):
         game_id = request.POST.get("game_id")
-        user_id = request.POST.get("user_id")
-        number_of_players = request.POST.get("number_of_players")
 
         # Check if all players are ready, and if so start the game.
         ready_players = Games.objects.filter(game_id=game_id)
@@ -93,6 +91,13 @@ class StartGame(APIView):
             self.begin_game(ready_players, game_id)
 
         return Response(f"Game {game_id} started!")
+
+    @staticmethod
+    def begin_game(ready_players, game_id):
+        ts = datetime.now()
+        generate_round(ready_players, ts, game_id)
+        # last, lets begin the game!
+        Games.objects.filter(game_id=game_id).update(score=0, timestamp=ts, round_num=0)
 
 
 class ClearGame(APIView):
@@ -163,13 +168,6 @@ class AddPlayer(APIView):
 
         else:
             return Response("User trying to join a game that doesn't exist.")
-
-    @staticmethod
-    def begin_game(ready_players, game_id):
-        ts = datetime.now()
-        generate_round(ready_players, ts, game_id)
-        # last, lets begin the game!
-        Games.objects.filter(game_id=game_id).update(score=0, timestamp=ts, round_num=0)
 
 
 class CheckStart(APIView):
