@@ -8,6 +8,8 @@ class Games(models.Model):
     player_id = models.TextField(unique=True, null=False)
     score = models.IntegerField(default=0, null=True)
     round_num = models.IntegerField(default=0, null=True)
+    num_players = models.IntegerField(null=False)
+    ready = models.BooleanField(default=False, null=False)
     timestamp = models.DateTimeField(auto_now=False, default=None, null=True)
 
 

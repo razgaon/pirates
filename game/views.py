@@ -12,28 +12,30 @@ from .serializers import *
 from rest_framework import viewsets, status
 from rest_framework import permissions
 
-task_archetypes = {"button_toggler": ['a-inator', 'b-inator', 'c-inator', 'd-inator'],
-                   "button_led": ['1-inator', '2-inator', '3-inator', '4-inator'],
-                   "button_incrementer": ['w-inator', 'x-inator', 'y-inator', 'z-inator'],
-                    }
-                #    "microphone-password": ['l-inator', 'm-inator', 'n-inator', 'o-inator', 'p-inator'],
-                #    "device-shake": ['fee', 'fi', 'fo', 'fum']}
+task_archetypes = {"button-toggle": ['a-inator', 'b-inator', 'c-inator', 'd-inator'],
+                   "button-LED-toggle": ['1-inator', '2-inator', '3-inator', '4-inator'],
+                   "button-increment": ['w-inator', 'x-inator', 'y-inator', 'z-inator'],
+                   "microphone-password": ['l-inator', 'm-inator', 'n-inator', 'o-inator', 'p-inator'],
+                   "device-shake": ['fee', 'fi', 'fo', 'fum']}
 
-task_texts = {"button_toggler": "Toggle the {control} {num} times",
-              "button_led": "Change the color of the {control} to {num}",
-              "button_incrementer": "Press the {control} {num} times",
-               }
-            #   "microphone-password": "Say the password into the {control} {num} times",
-            #   "device-shake": "Shake the {control} {num} time!"}
+task_texts = {"button-toggle": "Toggle the {control} {num} times",
+              "button-LED-toggle": "Change the color of the {control} to {num}",
+              "button-increment": "Press the {control} {num} times",
+              "microphone-password": "Say the password into the {control} {num} times",
+              "device-shake": "Shake the {control} {num} time!"}
 
-task_goals = {"button_toggler": [0, 2],
-              "button_led": [0, 3],
-              "button_incrementer": [5, 15],
-               }
-            #   "microphone-password": [1, 1],
-            #   "device-shake": [1, 1]}
+task_goals = {"button-toggle": [0, 2],
+              "button-LED-toggle": [0, 3],
+              "button-increment": [5, 15],
+              "microphone-password": [1, 1],
+              "device-shake": [1, 1]}
 
-NUM_PLAYERS = 2
+MAX_TIME = 60
+
+base_json = {
+    "status": "error",
+    "text": "SERVER ERROR: DIDNT OVERWRITE JSON"
+}
 
 
 class GamesViewSet(viewsets.ModelViewSet):
@@ -74,19 +76,11 @@ class ClearGame(APIView):
     """
 
     def get(self, request, format=None):
-        # game_id = request.GET.get("game_id")
-        # assert game_id == "game1"
-
-        # TaskNameMappings.objects.filter(game_id=game_id).delete()
-        # TaskCommunication.objects.filter(game_id=game_id).delete()
-        # CurrentTasks.objects.filter(game_id=game_id).delete()
-        # Games.objects.filter(game_id=game_id).delete()
-
         TaskNameMappings.objects.all().delete()
         TaskCommunication.objects.all().delete()
         CurrentTasks.objects.all().delete()
         Games.objects.all().delete()
-        return Response("data cleared!")
+        return Response("data cleared!") #no json because ESP should never request a clear
 
 
 class Score(APIView):
@@ -97,13 +91,15 @@ class Score(APIView):
     def get(self, request, format=None):
         game_id = request.GET.get("game_id")
         if game_id == None:
-            return Response("Please give game id")
-
-        game = Games.objects.filter(game_id=game_id).first()
-        if game == None:
-            return Response(f"There is no game recorded with id {game_id}")
+            base_json["text"] = "No game_id provided"
         else:
-            return Response(f"The score for game with id {game_id} is {game.score}")
+            game = Games.objects.filter(game_id=game_id).first()
+            if game == None:
+                base_json["text"] = f"There is no game recorded with id {game_id}"
+            else:
+                base_json["status"] = "update"
+                base_json["text"] = f"The score for game with id {game_id} is {game.score}"
+        return Response(base_json)
 
 
 class PlayerReady(APIView):
@@ -112,22 +108,27 @@ class PlayerReady(APIView):
     """
 
     def post(self, request, format=None):
-        # First add the user.
+        # extract tags
         user_id = request.POST.get("user_id")
         game_id = request.POST.get("game_id")
-        data = {'game_id': game_id, 'player_id': user_id}
-        player = Games(**data)
-        player.save()
-        # IF WE NOW HAVE THE COMPLETE GAME, WE'RE GOING TO DO A BUNCH OF STUFF
-        ready_players = Games.objects.filter(game_id=game_id)
-        if len(ready_players) == NUM_PLAYERS:
+        
+        #update player to ready, and check if enough players have joined
+        Games.objects.filter(game_id=game_id, player_id=user_id).update(ready=True)
+        game_size = Games.objects.values_list('num_players', flat=True).filter(game_id=game_id)[0]
+        ready_players = Games.objects.filter(game_id=game_id, ready=True)
+        
+        if len(ready_players) == game_size:
             ts = datetime.now()
             generate_round(ready_players, ts, game_id)
             # last, lets begin the game!
             Games.objects.filter(game_id=game_id).update(score=0, timestamp=ts, round_num=0)
+        base_json["status"] = "update"
+        base_json["text"] = f"user {user_id} is now ready"
+        return Response(base_json)
 
-        return Response(f"user {user_id} is now ready", status=status.HTTP_200_OK)
-
+# data = {'game_id': game_id, 'player_id': user_id}
+# player = Games(**data)
+# player.save()
 
 class CheckStart(APIView):
     """
@@ -135,17 +136,24 @@ class CheckStart(APIView):
     """
 
     def get(self, request, format=None):
+        # extract tags
         user_id = request.GET.get("user_id")
         game_id = request.GET.get("game_id")
-
-        ready_players = Games.objects.filter(game_id=game_id).all()
-        response = {}
-        if len(ready_players) == NUM_PLAYERS:
+        
+        #check if all players have joined
+        game_size = Games.objects.values_list('num_players', flat=True).filter(game_id=game_id)[0]
+        ready_players = Games.objects.filter(game_id=game_id, ready=True)
+        response = base_json
+        
+        if len(ready_players) == game_size:
+            #if all players have joined, assign everything and send ESP response
             fill_esp_response(response, user_id, game_id)
             return Response(response)
         else:
-            response["status"] = False
-            return Response(json.dumps(response))
+            #otherwise inform game has not started
+            response["status"] = "static"
+            response["text"] = "game has not not started"
+            return Response(response)
 
 
 class TaskComplete(APIView):
@@ -154,29 +162,53 @@ class TaskComplete(APIView):
     """
 
     def post(self, request, format=None):
+        #extract tags
         user_id = request.POST.get("user_id")
         game_id = request.POST.get("game_id")
+        
+        #pull user task and check if they've repeated
         current_task = CurrentTasks.objects.filter(game_id=game_id, player_id=user_id)
         assert len(current_task) == 1 # A player can't have more than one task at a time
         if current_task.first().finished:
-            return Response(f"task for user {user_id} had already been logged, no change", status=status.HTTP_200_OK)
+            response = base_json
+            response["status"] = "error"
+            response["text"] = f"task for user {user_id} had already been logged, no change"
+            return Response(response)
+        
+        #if not, check whether the game is over, and if its not, update the task to be finished
+        ts = dateteime.now()
+        game_started_str = CurrentGamesTasks.objects.values_list('timestamp', flat=True).filter(game_id=game_id)[0]
+        game_started_dt = datetime.strptime(game_started_str, '%Y-%m-%d %H:%M:%S.%f')
+        delta_time = (ts-game_started_dt).total_seconds()
+        if delta_time > MAX_TIME:
+            response["status"] = "error"
+            response["text"] = f"task for user {user_id} had already been logged, no change"
         CurrentTasks.objects.filter(game_id=game_id, player_id=user_id).update(finished=True)
-        after_check = CurrentTasks.objects.filter(game_id=game_id, player_id=user_id).first().finished
-        time_assigned = \
-            CurrentTasks.objects.values_list('timestamp', flat=True).filter(game_id=game_id, player_id=user_id)[0]
-        goal, archetype = \
-            CurrentTasks.objects.values_list('goal', 'task_archetype').filter(game_id=game_id, player_id=user_id)[0]
+
+        #calculate score for task completion and add to player score
+        time_assigned, goal, archetype = \
+            CurrentTasks.objects.values_list('timestamp', 'goal', 'task_archetype').filter(game_id=game_id, player_id=user_id)[0]
         add_score = score_fn(datetime.now(), time_assigned, goal, archetype)
         Games.objects.filter(game_id=game_id).update(score=F('score') + add_score)
+        
+        #check number of finished tasks against the number of people in game... if same then new round!
         finished_tasks = CurrentTasks.objects.filter(game_id=game_id, finished=True)
-        if len(finished_tasks) == NUM_PLAYERS:
+        game_size = Games.objects.values_list('num_players', flat=True).filter(game_id=game_id)[0]
+        
+        if len(finished_tasks) == game_size:
+            #wipe databases with round-level info
             TaskNameMappings.objects.filter(game_id=game_id).delete()
             TaskCommunication.objects.filter(game_id=game_id).delete()
             CurrentTasks.objects.filter(game_id=game_id).delete()
+            
+            #generate a new round and update the round counter
             ready_players = Games.objects.filter(game_id=game_id).all()
             generate_round(ready_players, datetime.now(), game_id)
             Games.objects.filter(game_id=game_id).update(round_num=F('round_num') + 1)
-        return Response(f"task for user {user_id} succesfully logged", status=status.HTTP_200_OK)
+        
+        base_json["status"] = "update"
+        base_json["text"] = f"task for user {user_id} succesfully logged"
+        return Response(base_json)
 
 
 class GetNewRound(APIView):
@@ -185,32 +217,38 @@ class GetNewRound(APIView):
     """
 
     def get(self, request, format=None):
+        #extract tags
         user_id = request.GET.get("user_id")
         game_id = request.GET.get("game_id")
         user_round_num = int(request.GET.get("round_num"))
-        assert user_round_num != None
+        assert user_round_num != None, "ESP transmitting user_round_num wrong"
 
+        #get the theoretical game round number. If our game number is highewr than the user's number, then we have started a new round and they need info
         game_round_num = Games.objects.values_list('round_num', flat=True).filter(game_id=game_id)[0]
-        response = {}
-        # assert 1==2, f"{user_round_num} \t\t {game_round_num} \t\t {type(user_round_num)} \t\t {type(game_round_num)}"
+        response = base_json
+
         if user_round_num < game_round_num:
             # The game has reassigned tasks and moved on to next round, pass this to the ESP
             fill_esp_response(response, user_id, game_id)
             return Response(response)
         else:
             # The round is still in play, nothing to update
-            assert user_round_num == game_round_num
-            response["status"] = False
-            return Response(json.dumps(response))
+            assert user_round_num == game_round_num, "user_round_num greater than game_round_num: Shouldn't happen"
+            response["status"] = "static"
+            response["text"] = "all tasks in round have not been completed yet"
+            return Response(response)
 
 
 class GenerateGameCode(APIView):
     """
-    Returns some key info about mappings for the next round.
+    Generates a game code
     """
 
     def get(self, request, format=None):
+        current_ids = set(Games.objects.values_list('game_id', flat=True))
         x = random.randint(1000, 9999)
+        while x in current_ids:
+            x = random.randint(1000, 9999)
         return Response(x)
 
 
@@ -218,11 +256,12 @@ def generate_round(ready_players, ts, game_id):
     """
     Actually GENERATES a new round. Makes assignments, saves to dbs
     """
+    num_players = len(ready_players)
     local_mappings = {k.player_id:{} for k in ready_players}
     # first, lets generate name mappings
     for archetype, name_options in task_archetypes.items():
         rndm_options = random.sample(name_options, len(name_options))
-        rndm_options = rndm_options[:NUM_PLAYERS]
+        rndm_options = rndm_options[:num_players]
         for i, player_obj in enumerate(ready_players):
             data = {'game_id': game_id,
                     'player_id': player_obj.player_id,
@@ -233,8 +272,8 @@ def generate_round(ready_players, ts, game_id):
             local_mappings[player_obj.player_id][archetype] = rndm_options[i]
     # second, lets assign everyone tasks and communications
     possible_tasks = list(task_archetypes.keys())
-    assigned_task_archetypes = [random.sample(possible_tasks, 1)[0] for _ in range(NUM_PLAYERS)]
-    order = random.sample([i for i in range(NUM_PLAYERS)], NUM_PLAYERS)
+    assigned_task_archetypes = [random.sample(possible_tasks, 1)[0] for _ in range(num_players)]
+    order = random.sample([i for i in range(num_players)], num_players)
     for i, player_obj in enumerate(ready_players):
         # first, we assign the task to the person
         arch = assigned_task_archetypes[i]
@@ -269,7 +308,7 @@ def fill_esp_response(response, user_id, game_id):
     """
     Uses pre-GENERATED data to FILL up a JSON response in the way the ESP likes it
     """
-    response["status"] = True
+    response["status"] = "update"
     response["round_num"] = Games.objects.values_list('round_num', flat=True).filter(game_id=game_id)[0]
     response["controllers"] = {}
     response["text"] = \

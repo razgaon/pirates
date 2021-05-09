@@ -9,6 +9,8 @@ class GamesSerializer(serializers.ModelSerializer):
                   'player_id',
                   'score',
                   'round_num',
+                  'num_players',
+                  'ready',
                   'timestamp')
 
     def create(self, validated_data):
