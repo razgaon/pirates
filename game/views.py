@@ -141,7 +141,8 @@ class PlayerReady(APIView):
         if game:
             # Check if user is already in the game:
             if Games.objects.filter(game_id=game_id, player_id=user_id).exists():
-                return Response("User has already joined the game.")
+                return Response("User has already \]="
+                                "joined the game.")
 
             # Check if all players are ready, and if so start the game.
             ready_players = Games.objects.filter(game_id=game_id)
