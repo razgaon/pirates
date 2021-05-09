@@ -15,3 +15,10 @@ This will create the database with the tables matching the models.
 To run the server:
 
 python manage.py runserver
+
+
+Documentation:
+/swagger
+/redoc
+
+How to start a game: create_game -> add_player -> start_game

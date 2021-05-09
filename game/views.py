@@ -77,7 +77,7 @@ class CreateGame(APIView):
 
 class StartGame(APIView):
     """
-    Starts a new game with x number of players.
+    Starts the game with game_id.
     """
 
     def post(self, request, format=None):
@@ -278,6 +278,16 @@ class GenerateGameCode(APIView):
     def get(self, request, format=None):
         x = random.randint(1000, 9999)
         return Response(x)
+
+
+class GetGames(APIView):
+    """
+    Get's a list of games to show in the lobby.
+    """
+
+    def get(self, request, format=None):
+        games = Games.objects.values_list('game_id')
+        return Response("Cool")
 
 
 def generate_name_mappings(game_id, ready_players, local_mappings):

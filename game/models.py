@@ -5,7 +5,7 @@ from django.db import models
 
 class Games(models.Model):
     game_id = models.TextField(null=False)
-    player_id = models.TextField(unique=True, null=False)
+    player_id = models.TextField(null=False)
     number_of_players = models.IntegerField(null=False, default=2)
     score = models.IntegerField(default=0, null=True)
     round_num = models.IntegerField(default=0, null=True)
