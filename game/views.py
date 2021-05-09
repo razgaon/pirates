@@ -37,33 +37,21 @@ NUM_PLAYERS = 2
 
 
 class GamesViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint that allows groups to be viewed or edited.
-    """
     queryset = Games.objects.all()
     serializer_class = GamesSerializer
 
 
 class TaskNameMappingsViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint that allows users to be viewed or edited.
-    """
     queryset = TaskNameMappings.objects.all()
     serializer_class = TaskNameMappingsSerializer
 
 
 class TaskCommunicationViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint that allows groups to be viewed or edited.
-    """
     queryset = TaskCommunication.objects.all()
     serializer_class = TaskCommunicationSerializer
 
 
 class CurrentTasksViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint that allows groups to be viewed or edited.
-    """
     queryset = CurrentTasks.objects.all()
     serializer_class = CurrentTasksSerializer
 
@@ -305,8 +293,9 @@ def generate_round(ready_players, ts, game_id):
         target_player_order = order[(order.index(i) + 1) % len(order)]
         target_player_id = ready_players[target_player_order].player_id
         target_player_goal, task_archetype = \
-        CurrentTasks.objects.values_list('goal', 'task_archetype').filter(game_id=game_id, player_id=target_player_id)[
-            0]
+            CurrentTasks.objects.values_list('goal', 'task_archetype').filter(game_id=game_id,
+                                                                              player_id=target_player_id)[
+                0]
         task_name = local_mappings[target_player_id][task_archetype]
         text = task_texts[task_archetype].format(control=task_name, num=target_player_goal)
         data = {'game_id': game_id,
