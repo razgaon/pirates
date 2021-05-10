@@ -1,6 +1,6 @@
 Introduction
 
-We are using Flask as the Backend Framework.
+We are using Django as the Backend Framework.
 
 Start:
 
@@ -8,10 +8,17 @@ pip install -r requirements.txt
 
 To generate the database, open a python terminal and do the following:
 
-from app import db # The main app file.
-
-db.create_all()
+python manage.py migrate
 
 This will create the database with the tables matching the models.
 
-This is a test.
+To run the server:
+
+python manage.py runserver
+
+
+Documentation:
+/swagger
+/redoc
+
+How to start a game: create_game -> add_player -> start_game

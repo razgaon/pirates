@@ -1,0 +1,1 @@
+web: gunicorn pirates2.wsgi
