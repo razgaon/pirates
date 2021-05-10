@@ -27,6 +27,8 @@ Button_Incrementer::Button_Incrementer(Button button_inp, char* controller_name_
   goal = goal_inp;
   success = false;
   restart_timer = millis();
+  tft;
+  quadrant;
 };
 
 Button_Incrementer::Button_Incrementer(TFT_eSPI t) {
@@ -43,11 +45,13 @@ Button_Incrementer::Button_Incrementer(TFT_eSPI t) {
 };
 
 bool Button_Incrementer::is_complete() {
-  if (goal >= 0 && goal <= count) {
-    success = true;
+  if (goal < 0) {
+    return false;
+  } else if (count >= goal) {
     return true;
+  } else {
+    return false;
   }
-  return false;
 };
 
 
@@ -106,7 +110,7 @@ void Button_Incrementer::set_quadrant(int q) {
   Arguments:
   bool success true if the task was completed or false if it wasn't
 */
-void Button_Incrementer::draw(bool s){
+void Button_Incrementer::draw(bool s) {
   if (quadrant != -1) {
     int x = 0;
     int y = 0;
@@ -130,15 +134,16 @@ void Button_Incrementer::draw(bool s){
     tft.println(controller_name);
     tft.setCursor(x, y + 10, 1);
     tft.fillRect(x, y, 50, 30, TFT_BLACK);
-    int interval = 30/goal;
+    int interval = 30 / goal;
     if (s) {
       tft.fillRect(x + 30, y + 40 - interval * count, 5, 5, TFT_BLACK);
       tft.println("Success    ");
     }
     else {
+      Serial.println("Drawing the incrementer");
       tft.print("---------");
-      tft.fillRect(x + 30, y + 40 - interval * (count - 1), 5, 5, TFT_BLACK);
-      tft.fillRect(x + 30, y + 40 - interval * count, 5, 5, TFT_ORANGE);
+      tft.fillRect(x + 30, y + 40 - (interval * count - 1), 5, 5, TFT_BLACK);
+      tft.fillRect(x + 30, y + 40 - (interval * count), 5, 5, TFT_ORANGE);
     }
   }
 };

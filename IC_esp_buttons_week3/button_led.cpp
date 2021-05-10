@@ -144,10 +144,10 @@ void Button_LED::draw(bool s) {
       tft.println("Success");
     }
     else {
-      if (goal == 2) {
+      if (goal == 1) {
         tft.fillRect(x + 15, y + 10, 25, 25, TFT_RED);
       }
-      else if (goal == 1) {
+      else if (goal == 2) {
         tft.fillRect(x + 15, y + 10, 25, 25, TFT_GREEN);
       }
       else if (goal == 3) {

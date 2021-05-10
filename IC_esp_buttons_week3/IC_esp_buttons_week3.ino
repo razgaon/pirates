@@ -135,6 +135,7 @@ int controllers_microphone_number;
 char* controllers_shaker_controller_name;
 int controllers_shaker_controller_goal;
 int controllers_shaker_number;
+bool sent_success = false;
 
 char* task;
 
@@ -220,10 +221,12 @@ void loop()
   if (game_over) {
     tft.fillScreen(TFT_BLACK);
     //      TODO - add request to server to get player's score
+    
     tft.println("Game has ended! Nice job! Press a button to go to the waiting room");
     //      blocking
     while (!(button1.update() || button2.update() || button3.update() || button4.update())) {}
     initialize = false;
+    sent_success = false;
   };
 
   if (!initialize) {
@@ -270,8 +273,8 @@ void loop()
 
 
         new_round = doc["status"]; // true means that the round has just loaded
-        if (new_round)
-        {
+        if (new_round) {
+          sent_success = false;
           // display setup
           tft.fillScreen(TFT_BLACK);
           tft.drawLine(64, 10, 64, 160, TFT_WHITE);
@@ -371,7 +374,8 @@ void loop()
 
     // TODO - for now we are only doing 1 round so no reinitialization of the controllers and tasks etc
     new_round = doc["status"];  // true
-    if (new_round) {//if it's true, we got some new controls, and we have to update, else not
+    if (new_round) { //if it's true, we got some new controls, and we have to update, else not
+      sent_success = false;
       task = strdup(doc["text"]);           // "Increment the scadoodle to 10"
       task_display = (char*)task;
       round_num = doc["round_num"]; // round number
@@ -385,38 +389,34 @@ void loop()
       JsonObject controllers_button_toggler = controllers["button_toggler"];
       controllers_button_toggler_controller_name = strdup(controllers_button_toggler["controller_name"]);
       controllers_button_toggler_controller_goal = controllers_button_toggler["controller_goal"]; // -1
-      controllers_button_toggler_number = controllers_button_incrementer["number"];               // 1
+      controllers_button_toggler_number = controllers_button_toggler["number"];               // 1
 
       JsonObject controllers_button_led = controllers["button_led"];
       controllers_button_led_controller_name = strdup(controllers_button_led["controller_name"]);
       controllers_button_led_controller_goal = controllers_button_led["controller_goal"]; // -1
-      controllers_button_led_number = controllers_button_incrementer["number"];           //
+      controllers_button_led_number = controllers_button_led["number"];           //
 
       //      JsonObject controllers_microphone = controllers["microphone"];
       //      controllers_microphone_controller_name = strdup(controllers_microphone["controller_name"]);
       //      controllers_microphone_controller_goal = controllers_microphone["controller_goal"]; // -1
-      //      controllers_microphone_number = controllers_button_incrementer["number"]; // 1
+      //      controllers_microphone_number = controllers_microphone["number"]; // 1
       //
       //      JsonObject controllers_shaker = controllers["shaker"];
       //      controllers_shaker_controller_name = strdup(controllers_shaker["controller_name"]); // "Scadoodle"
       //      controllers_shaker_controller_goal = controllers_shaker["controller_goal"]; // -1
-      //      controllers_shaker_number = controllers_button_incrementer["number"]; // 1
+      //      controllers_shaker_number = controllers_shaker["number"]; // 1
     }
   }
 
   //  if the round is running then update the controllers (check if buttons pressed, etc)
-  if (!new_round)
-  {
-    if (controllers_button_incrementer_number != -1)
-    {
+  if (!new_round) {
+    if (controllers_button_incrementer_number != -1) {
       incrementer_updated = incrementer.update();
     }
-    if (controllers_button_toggler_number != -1)
-    {
+    if (controllers_button_toggler_number != -1) {
       button_toggler_updated = toggler.update();
     }
-    if (controllers_button_led_number != -1)
-    {
+    if (controllers_button_led_number != -1) {
       button_led_updated = button_led.update();
     }
 
@@ -527,33 +527,34 @@ void loop()
     //    }
 
     // if a controller was updated, then show them to client - this will be updated to incorporate UI next week
-    if (incrementer.is_complete() || incrementer_updated) {
+    if ((incrementer.is_complete() || incrementer_updated) && !sent_success) {
+      Serial.println("Draw incrementer");
       incrementer.draw(incrementer.is_complete());
     }
-    if (toggler.is_complete() || button_toggler_updated) {
+    if ((toggler.is_complete() || button_toggler_updated) && !sent_success) {
+      Serial.println("Draw toggler");
       toggler.draw(toggler.is_complete());
     }
-    if (button_led.is_complete() || button_led_updated) {
+    if ((button_led.is_complete() || button_led_updated) && !sent_success) {
+      Serial.println("Draw led");
+
       button_led.draw(button_led.is_complete());
     }
-//    if (microphone.is_complete(transcript) || microphone_updated) {
-//      microphone.draw(microphone.is_complete());
-//    }
-//    if (shaker.is_complete() && shaker_updated()) {
-//      shaker.draw(shaker.is_complete());
-//    }
+    //    if (microphone.is_complete(transcript) || microphone_updated) {
+    //      microphone.draw(microphone.is_complete());
+    //    }
+    //    if (shaker.is_complete() && shaker_updated()) {
+    //      shaker.draw(shaker.is_complete());
+    //    }
 
     //  after updating the client view, post any successes to the backend
     if (incrementer.is_complete() || toggler.is_complete() || button_led.is_complete()
         //    || microphone.is_complete(transcript) || shaker.is_complete()
-       )
-    {
+        && !sent_success) {
       post_completed_task(game_id, player_name, request, response, OUT_BUFFER_SIZE, RESPONSE_TIMEOUT);
+      sent_success = true;
     }
   }
-
-
-  //  TODO - add parsing whether game is over or not
 
 }
 
