@@ -56,6 +56,9 @@ urlpatterns = [
     path('start_game/', views.StartGame.as_view()),
 
     # Frontend
+
+    path('get_lobby/', views.ViewLobby.as_view()),
+    path('get_game/', views.ViewGame.as_view()),
     path('get_game_status/', views.GameStatus.as_view()),
     path('get_game_tasks/', views.ViewTaskComms.as_view()),
     path('get_task_statuses/', views.ViewTasks.as_view()),
