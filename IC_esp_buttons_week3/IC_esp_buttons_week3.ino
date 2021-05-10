@@ -140,6 +140,7 @@ bool new_round_req_loop = false;
 bool leave_check_start = false;
 
 char *task;
+char *end_text;
 
 bool incrementer_updated = false;
 bool button_toggler_updated = false;
@@ -222,9 +223,9 @@ void loop()
   if (game_over)
   {
     tft.fillScreen(TFT_BLACK);
-    //      TODO - add request to server to get player's score
 
-    tft.println("Game has ended! Nice job! Press a button to go to the waiting room");
+    tft.println(end_text); // gets score
+    tft.println("Press a button to go to the waiting room");
     //      blocking
     while (!(button1.update() || button2.update() || button3.update() || button4.update()))
     {
@@ -429,6 +430,7 @@ void loop()
     game_over = (strcmp(doc["status"], "over") == 0);
     if (game_over)
     {
+      end_text = doc["text"];
       return;
     }
     //only one of new_round, new_round_req_loop, and game_over can be true at a time
@@ -749,22 +751,22 @@ void do_http_request(char *host, char *request, char *response, uint16_t respons
   }
 }
 
-void post_ready_to_play(char *game_id, char *player_name, char *request_buffer, char *response, uint16_t response_size, uint16_t response_timeout)
-{
-  char body[100];                                                                            //for body
-  sprintf(body, "game_id=%s&user_id=%s", game_id, player_name);                              //generate body
-  int body_len = strlen(body);                                                               //calculate body length (for header reporting)
-  sprintf(request_buffer, "POST https://shipgroups.herokuapp.com/user_ready/ HTTP/1.1\r\n"); // TODO!!!!!
-  strcat(request_buffer, "Host: shipgroups.herokuapp.com\r\n");
-  strcat(request_buffer, "Content-Type: application/x-www-form-urlencoded\r\n");
-  sprintf(request_buffer + strlen(request_buffer), "Content-Length: %d\r\n", body_len); //append string formatted to end of request buffer
-  strcat(request_buffer, "\r\n");                                                       //new line from header to body
-  strcat(request_buffer, body);                                                         //body
-  strcat(request_buffer, "\r\n");                                                       //new line
-  Serial.println(request_buffer);
-  do_http_request("shipgroups.herokuapp.com", request_buffer, response, response_size, response_timeout, true);
-  Serial.println(response); //viewable in Serial Terminal
-}
+// void post_ready_to_play(char *game_id, char *player_name, char *request_buffer, char *response, uint16_t response_size, uint16_t response_timeout)
+// {
+//   char body[100];                                                                            //for body
+//   sprintf(body, "game_id=%s&user_id=%s", game_id, player_name);                              //generate body
+//   int body_len = strlen(body);                                                               //calculate body length (for header reporting)
+//   sprintf(request_buffer, "POST https://shipgroups.herokuapp.com/user_ready/ HTTP/1.1\r\n"); // TODO!!!!!
+//   strcat(request_buffer, "Host: shipgroups.herokuapp.com\r\n");
+//   strcat(request_buffer, "Content-Type: application/x-www-form-urlencoded\r\n");
+//   sprintf(request_buffer + strlen(request_buffer), "Content-Length: %d\r\n", body_len); //append string formatted to end of request buffer
+//   strcat(request_buffer, "\r\n");                                                       //new line from header to body
+//   strcat(request_buffer, body);                                                         //body
+//   strcat(request_buffer, "\r\n");                                                       //new line
+//   Serial.println(request_buffer);
+//   do_http_request("shipgroups.herokuapp.com", request_buffer, response, response_size, response_timeout, true);
+//   Serial.println(response); //viewable in Serial Terminal
+// }
 
 char *check_start(char *game_id, char *player_name, char *request_buffer, char *response, uint16_t response_size, uint16_t response_timeout)
 {
