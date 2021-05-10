@@ -50,13 +50,13 @@ urlpatterns = [
     path('task_complete/', views.TaskComplete.as_view()),
     path('get_new_round/', views.GetNewRound.as_view()),
     path('clear/', views.ClearGame.as_view()),
-    path('score/', views.Score.as_view()),
+    path('score/', views.GetScore.as_view()),
     path('get_game_code/', views.GenerateGameCode.as_view()),
     path('create_game/', views.CreateGame.as_view()),
     path('start_game/', views.StartGame.as_view()),
 
     # Frontend
-    path('get_games/', views.GetGames.as_view()),
+    # path('get_games/', views.as_view()),
 
     # Documentation
     url(r'^swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
