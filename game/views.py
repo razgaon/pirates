@@ -380,9 +380,11 @@ class CheckStart(APIView):
         if game_id == None:
             response["text"] = "No game_id provided"
             return Response(response)
-        elif CurrentTasks.objects.filter(game_id=game_id).count() < 1:
+        elif Games.objects.filter(game_id=game_id).count() < 1:
             response["text"] = "game doesn't exist"
             return Response(response)
+
+        print('OKOK: game id provided and game exists')
 
         # check if all players have joined
         game_size = Games.objects.filter(game_id=game_id).first().num_players
