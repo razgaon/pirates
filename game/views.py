@@ -213,7 +213,7 @@ class CreateGame(APIView):
         user_id = request.POST.get("user_id")
         number_of_players = request.POST.get("number_of_players")
 
-        data = {'game_id': game_id, 'player_id': user_id, 'number_of_players': number_of_players, 'esp_connected': False}
+        data = {'game_id': game_id, 'player_id': user_id, 'num_players': number_of_players, 'esp_connected': False}
 
         # Save a new game in the database
         player = Games(**data)
@@ -232,13 +232,18 @@ class AddPlayer(APIView):
         user_id = request.POST.get("user_id")
         game_id = request.POST.get("game_id")
         
+        #check if game exists
+        game = Games.objects.filter(game_id=game_id).first()
+        if game == None:
+            return Response(f"There is no game recorded with id {game_id}")
+        
         #check if game is full
         players_in_game = Games.objects.filter(game_id=game_id).count()
         game_size = Games.objects.filter(game_id=game_id).first().number_of_players
         if game_size - players_in_game < 1:
             return Response(f"game {game_id} is already full")
         
-        #update player to ready, and check if enough players have joined
+        #if neither happens, add player to game
         data = {'game_id': game_id,
                 'player_id': user_id,
                 'num_players': game_size,
