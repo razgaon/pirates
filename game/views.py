@@ -18,11 +18,11 @@ task_archetypes = {"button-toggle": ['a-inator', 'b-inator', 'c-inator', 'd-inat
                    "microphone-password": ['l-inator', 'm-inator', 'n-inator', 'o-inator', 'p-inator'],
                    "device-shake": ['fee', 'fi', 'fo', 'fum']}
 
-task_texts = {"button-toggle": "Toggle the {control} {num} times",
-              "button-LED-toggle": "Change the color of the {control} to {num}",
-              "button-increment": "Press the {control} {num} times",
-              "microphone-password": "Say the password into the {control} {num} times",
-              "device-shake": "Shake the {control} {num} time!"}
+task_texts = {"button-toggle": "Toggle {control} [{num}] ",
+              "button-LED-toggle": "Change {control} color [{num}]",
+              "button-increment": "Press {control} [{num}]",
+              "microphone-password": "Say password into {control} [{num}]",
+              "device-shake": "Shake {control} [{num}]}
 
 task_goals = {"button-toggle": [0, 2],
               "button-LED-toggle": [0, 3],
@@ -461,15 +461,23 @@ def generate_round(ready_players, ts, game_id):
     """
     Actually GENERATES a new round. Makes assignments, saves to dbs
     """
-    local_mappings = {k.player_id: {} for k in ready_players}
+    local_mappings = {k.player_id:{} for k in ready_players}
     # first, lets generate name mappings
-    generate_name_mappings(game_id, ready_players, local_mappings)
-
-    num_players = len(ready_players)
+    for archetype, name_options in task_archetypes.items():
+        rndm_options = random.sample(name_options, len(name_options))
+        rndm_options = rndm_options[:NUM_PLAYERS]
+        for i, player_obj in enumerate(ready_players):
+            data = {'game_id': game_id,
+                    'player_id': player_obj.player_id,
+                    'task_archetype': archetype,
+                    'task_name': rndm_options[i]}
+            mapping = TaskNameMappings(**data)
+            mapping.save()
+            local_mappings[player_obj.player_id][archetype] = rndm_options[i]
     # second, lets assign everyone tasks and communications
     possible_tasks = list(task_archetypes.keys())
-    assigned_task_archetypes = [random.sample(possible_tasks, 1)[0] for _ in range(num_players)]
-    order = random.sample([i for i in range(num_players)], num_players)
+    assigned_task_archetypes = [random.sample(possible_tasks, 1)[0] for _ in range(NUM_PLAYERS)]
+    order = random.sample([i for i in range(NUM_PLAYERS)], NUM_PLAYERS)
     for i, player_obj in enumerate(ready_players):
         # first, we assign the task to the person
         arch = assigned_task_archetypes[i]
@@ -482,13 +490,12 @@ def generate_round(ready_players, ts, game_id):
                 'timestamp': ts}
         curtask = CurrentTasks(**data)
         curtask.save()
-    # now, lets establish communication expectations
+    # last, lets establish communication expectations
     for i, player_obj in enumerate(ready_players):
         my_id = player_obj.player_id
         target_player_order = order[(order.index(i) + 1) % len(order)]
         target_player_id = ready_players[target_player_order].player_id
-        target_player_goal, task_archetype = \
-            CurrentTasks.objects.values_list('goal', 'task_archetype').filter(game_id=game_id,player_id=target_player_id)[0]
+        target_player_goal, task_archetype = CurrentTasks.objects.values_list('goal', 'task_archetype').filter(game_id=game_id, player_id=target_player_id)[0]
         task_name = local_mappings[target_player_id][task_archetype]
         text = task_texts[task_archetype].format(control=task_name, num=target_player_goal)
         data = {'game_id': game_id,
