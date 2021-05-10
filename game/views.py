@@ -86,6 +86,7 @@ class GenerateGameCode(APIView):
             x = random.randint(1000, 9999)
         return Response(x)
 
+#can be used to fulfill Silvina requirement "3) Display the status of each task and update the score as tasks are completed.". If you also want score, then just call GameStatus or GetScore
 class ViewTasks(APIView):
     """
     Returns the currently active set of tasks for the game with the provided game_id
@@ -106,6 +107,7 @@ class ViewTasks(APIView):
         data = list(CurrentTasks.objects.filter(game_id=game_id).values())  # wrap in list(), because QuerySet is not JSON serializable
         return JsonResponse(data, safe=False) 
 
+#can be used to fulfill Silvina requirement "2) Display all the tasks assigned to the ship group."
 class ViewTaskComms(APIView):
     """
     Returns the current mappings of "task givers" to "task receivers"
@@ -126,7 +128,13 @@ class ViewTaskComms(APIView):
         data = list(TaskCommunication.objects.filter(game_id=game_id).values())  # wrap in list(), because QuerySet is not JSON serializable
         return JsonResponse(data, safe=False) 
 
-class ViewGames(APIView):
+
+# {
+#     'game_id': 1234
+#     'status': 'in_progress',
+#     'score': 15
+# }
+class ViewGame(APIView):
     """
     Returns the current state of the game with the provided game id
     """
@@ -138,13 +146,51 @@ class ViewGames(APIView):
         if game_id == None:
             base_json["text"] = "No game_id provided"
             return Response(base_json)
-        elif Games.objects.filter(game_id=game_id).count() < 1:
-            base_json["text"] = "No current active tasks for this game OR game doesn't exist"
+        elif Games.objects.filter(game_id=game_id).count() == 0:
+            base_json["text"] = "game doesn't exist"
             return Response(base_json)
         
         #otherwise just query and send
-        data = list(Games.objects.filter(game_id=game_id).values())  # wrap in list(), because QuerySet is not JSON serializable
-        return JsonResponse(data, safe=False) 
+        response = generate_game_status_json(game_id)
+        return Response(response)
+
+# [
+#     {
+#         "game_id": 1234,
+#         "players": [1, 2, 3],
+#         "num_of_players": 6,
+#         "status": 'started'
+#     },
+#     {
+#         "game_id": 1234,
+#         "players": [1, 2, 3],
+#         "num_of_players": 6,
+#         "status": 'not started'
+#     }
+# ]
+class ViewLobby(APIView):
+    """
+    Returns the current state of the game with the provided game id
+    """
+
+    def get(self, request, format=None):
+        
+        resp = []
+        for game_id in Games.objects.values('game_id').distinct():
+            response = generate_game_status_json(game_id)
+            resp.append(response)
+        return Response(resp) 
+
+def generate_game_status_json(game_id):
+    resp_inner = {}
+    resp_inner["game_id"] = game_id
+    resp_inner["players"] = Games.objects.filter(game_id=game_id).values_list("player_id", flat=True)
+    resp_inner["num_players"] = Games.objects.filter(game_id=game_id).first().num_players
+    
+    game_started = game_started(game_id)
+    game_over = game_finished(game_id)
+    resp_inner["status"] = "finished" if game_over else ("active" if game_started else "waiting for start")
+    return resp_inner
 
 """
 
@@ -237,7 +283,8 @@ class GetScore(APIView):
             else:
                 return Response(game.score)
 
-class GameFinished(APIView):
+#can be used to fulfill Silvina requirement "4) Indicate when the game is over and show the final score."
+class GameStatus(APIView):
     """
     Returns score of game
     """
@@ -245,18 +292,42 @@ class GameFinished(APIView):
     def get(self, request, format=None):
         game_id = request.GET.get("game_id")
         
-        ts = dateteime.now()
-        game_started_str = Games.objects.filter(game_id=game_id).first().timestamp
-        game_started_dt = datetime.strptime(game_started_str, '%Y-%m-%d %H:%M:%S.%f')
-        delta_time = (ts-game_started_dt).total_seconds()
-        return Response(delta_time > MAX_TIME)
+        game_started = game_started(game_id)
+        game_over = game_finished(game_id)
+        
+        resp = {}
+        if game_started and game_over:
+            resp["status"] = "finished"
+            resp["score"] = Games.objects.filter(game_id=game_id).first().score
+            return Response(resp)
+        elif game_started and not game_over:
+            resp["status"] = "active"
+            resp["score"] = Games.objects.filter(game_id=game_id).first().score
+            return Response(resp)
+        else:
+            resp["status"] = "waiting for start"
+            resp["score"] = -1
+            return Response(resp)
+
+def game_started(game_id):
+    ready_players = Games.objects.filter(game_id=game_id, esp_connected=True)
+    game_size = Games.objects.filter(game_id=game_id).first().number_of_players
+    game_started = len(ready_players) == game_size
+    return game_started
+
+def game_finished(game_id):
+    ts = dateteime.now()
+    game_started_str = Games.objects.filter(game_id=game_id).first().timestamp
+    game_started_dt = datetime.strptime(game_started_str, '%Y-%m-%d %H:%M:%S.%f')
+    delta_time = (ts-game_started_dt).total_seconds()
+    game_over = delta_time > MAX_TIME
+    return game_over
 
 """
 
 ESP FACING METHODS
 
 """
-
 
 class CheckStart(APIView):
     """
@@ -384,6 +455,7 @@ class GetNewRound(APIView):
             response["status"] = "static"
             response["text"] = "all tasks in round have not been completed yet"
             return Response(response)
+
 
 def generate_round(ready_players, ts, game_id):
     """
