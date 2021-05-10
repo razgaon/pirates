@@ -419,6 +419,7 @@ class TaskComplete(APIView):
         game_started_dt = Games.objects.filter(game_id=game_id).first().timestamp
         # game_started_dt = datetime.strptime(game_started_str, '%Y-%m-%d %H:%M:%S.%f')
         delta_time = (ts - game_started_dt).total_seconds()
+
         if delta_time > MAX_TIME:
             response["status"] = "over"
             response["text"] = f"task was completed after the game was over"
@@ -558,6 +559,7 @@ def generate_round(ready_players, ts, game_id):
                 'text': text}
         taskcomm = TaskCommunication(**data)
         taskcomm.save()
+
 
 
 def fill_esp_response(response, user_id, game_id):
