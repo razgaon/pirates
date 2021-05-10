@@ -1,8 +1,10 @@
 import random
 import json
+import pytz
 from datetime import datetime
 
 from django.db.models import F
+from django.http import JsonResponse
 
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -30,12 +32,8 @@ task_goals = {"button-toggle": [0, 2],
               "microphone-password": [1, 1],
               "device-shake": [1, 1]}
 
-MAX_TIME = 60
-
-base_json = {
-    "status": "error",
-    "text": "SERVER ERROR: DIDNT OVERWRITE JSON"
-}
+MAX_TIME = 180
+utc=pytz.UTC
 
 
 class GamesViewSet(viewsets.ModelViewSet):
@@ -57,11 +55,14 @@ class CurrentTasksViewSet(viewsets.ModelViewSet):
     queryset = CurrentTasks.objects.all()
     serializer_class = CurrentTasksSerializer
 
+
 """
 
 META DATABASE MANIPULATION/LOOKUP METHODS
 
 """
+
+
 class ClearGame(APIView):
     """
     Clears game DB, for testing purposes.
@@ -73,6 +74,7 @@ class ClearGame(APIView):
         CurrentTasks.objects.all().delete()
         Games.objects.all().delete()
         return Response("data cleared!")
+
 
 class GenerateGameCode(APIView):
     """
@@ -86,7 +88,8 @@ class GenerateGameCode(APIView):
             x = random.randint(1000, 9999)
         return Response(x)
 
-#can be used to fulfill Silvina requirement "3) Display the status of each task and update the score as tasks are completed.". If you also want score, then just call GameStatus or GetScore
+
+# can be used to fulfill Silvina requirement "3) Display the status of each task and update the score as tasks are completed.". If you also want score, then just call GameStatus or GetScore
 class ViewTasks(APIView):
     """
     Returns the currently active set of tasks for the game with the provided game_id
@@ -94,20 +97,26 @@ class ViewTasks(APIView):
 
     def get(self, request, format=None):
         game_id = request.GET.get("game_id")
-        
-        #check for bad stuff
+        base_json = {
+            "status": "error",
+            "text": "SERVER ERROR: DIDNT OVERWRITE JSON"
+        }
+        # check for bad stuff
         if game_id == None:
             base_json["text"] = "No game_id provided"
             return Response(base_json)
         elif CurrentTasks.objects.filter(game_id=game_id).count() < 1:
             base_json["text"] = "No current active tasks for this game OR game doesn't exist"
             return Response(base_json)
-        
-        #otherwise just query and send
-        data = list(CurrentTasks.objects.filter(game_id=game_id).values())  # wrap in list(), because QuerySet is not JSON serializable
-        return JsonResponse(data, safe=False) 
 
-#can be used to fulfill Silvina requirement "2) Display all the tasks assigned to the ship group."
+        # otherwise just query and send
+        data = list(CurrentTasks.objects.filter(
+            game_id=game_id).values())  # wrap in list(), because QuerySet is not JSON serializable
+        return JsonResponse(data, safe=False)
+
+    # can be used to fulfill Silvina requirement "2) Display all the tasks assigned to the ship group."
+
+
 class ViewTaskComms(APIView):
     """
     Returns the current mappings of "task givers" to "task receivers"
@@ -115,21 +124,26 @@ class ViewTaskComms(APIView):
 
     def get(self, request, format=None):
         game_id = request.GET.get("game_id")
-        
-        #check for bad stuff
+        base_json = {
+            "status": "error",
+            "text": "SERVER ERROR: DIDNT OVERWRITE JSON"
+        }
+        # check for bad stuff
         if game_id == None:
             base_json["text"] = "No game_id provided"
             return Response(base_json)
         elif TaskCommunication.objects.filter(game_id=game_id).count() < 1:
             base_json["text"] = "No current active tasks for this game OR game doesn't exist"
             return Response(base_json)
-        
-        #otherwise just query and send
-        data = list(TaskCommunication.objects.filter(game_id=game_id).values())  # wrap in list(), because QuerySet is not JSON serializable
-        return JsonResponse(data, safe=False) 
+
+        # otherwise just query and send
+        data = list(TaskCommunication.objects.filter(
+            game_id=game_id).values())  # wrap in list(), because QuerySet is not JSON serializable
+        return JsonResponse(data, safe=False)
+
+    # {
 
 
-# {
 #     'game_id': 1234
 #     'status': 'in_progress',
 #     'score': 15
@@ -141,18 +155,22 @@ class ViewGame(APIView):
 
     def get(self, request, format=None):
         game_id = request.GET.get("game_id")
-        
-        #check for bad stuff
+        base_json = {
+            "status": "error",
+            "text": "SERVER ERROR: DIDNT OVERWRITE JSON"
+        }
+        # check for bad stuff
         if game_id == None:
             base_json["text"] = "No game_id provided"
             return Response(base_json)
         elif Games.objects.filter(game_id=game_id).count() == 0:
             base_json["text"] = "game doesn't exist"
             return Response(base_json)
-        
-        #otherwise just query and send
+
+        # otherwise just query and send
         response = generate_game_status_json(game_id)
         return Response(response)
+
 
 # [
 #     {
@@ -174,29 +192,32 @@ class ViewLobby(APIView):
     """
 
     def get(self, request, format=None):
-        
         resp = []
-        for game_id in Games.objects.values('game_id').distinct():
+        for game_id in set(Games.objects.values_list('game_id', flat=True)):
             response = generate_game_status_json(game_id)
             resp.append(response)
-        return Response(resp) 
+        return Response(resp)
+
 
 def generate_game_status_json(game_id):
     resp_inner = {}
     resp_inner["game_id"] = game_id
     resp_inner["players"] = Games.objects.filter(game_id=game_id).values_list("player_id", flat=True)
     resp_inner["num_players"] = Games.objects.filter(game_id=game_id).first().num_players
+
+    g_o = game_finished(game_id)
+    g_s = game_started(game_id)
     
-    game_started = game_started(game_id)
-    game_over = game_finished(game_id)
-    resp_inner["status"] = "finished" if game_over else ("active" if game_started else "waiting for start")
+    resp_inner["status"] = "finished" if g_o else ("active" if g_s else "waiting for start")
     return resp_inner
+
 
 """
 
 WEBSITE FACING METHODS
 
 """
+
 
 class CreateGame(APIView):
     """
@@ -208,13 +229,15 @@ class CreateGame(APIView):
         user_id = request.POST.get("user_id")
         number_of_players = request.POST.get("number_of_players")
 
-        data = {'game_id': game_id, 'player_id': user_id, 'number_of_players': number_of_players, 'esp_connected': False}
+        data = {'game_id': game_id, 'player_id': user_id, 'num_players': number_of_players, 'esp_connected': False}
 
         # Save a new game in the database
         player = Games(**data)
         player.save()
 
-        return Response(f"Game {game_id} with {number_of_players} players generated by user {user_id}!") #not in json format bc returned to frontend
+        return Response(
+            f"Game {game_id} with {number_of_players} players generated by user {user_id}!")  # not in json format bc returned to frontend
+
 
 class AddPlayer(APIView):
     """
@@ -226,21 +249,27 @@ class AddPlayer(APIView):
         user_id = request.POST.get("user_id")
         game_id = request.POST.get("game_id")
         
+        #check if game exists
+        game = Games.objects.filter(game_id=game_id).first()
+        if game == None:
+            return Response(f"There is no game recorded with id {game_id}")
+        
         #check if game is full
         players_in_game = Games.objects.filter(game_id=game_id).count()
-        game_size = Games.objects.filter(game_id=game_id).first().number_of_players
+        game_size = Games.objects.filter(game_id=game_id).first().num_players
         if game_size - players_in_game < 1:
             return Response(f"game {game_id} is already full")
         
-        #update player to ready, and check if enough players have joined
+        #if neither happens, add player to game
         data = {'game_id': game_id,
                 'player_id': user_id,
                 'num_players': game_size,
                 'esp_connected': False}
         newplayer = Games(**data)
         newplayer.save()
-        
+
         return Response(f"user {user_id} is now ready")
+
 
 class StartGame(APIView):
     """
@@ -252,7 +281,7 @@ class StartGame(APIView):
 
         # Check if all players are ready, and if so start the game.
         ready_players = Games.objects.filter(game_id=game_id, esp_connected=True)
-        game_size = Games.objects.filter(game_id=game_id).first().number_of_players
+        game_size = Games.objects.filter(game_id=game_id).first().num_players
 
         if len(ready_players) == game_size:
             self.begin_game(ready_players, game_id)
@@ -262,10 +291,11 @@ class StartGame(APIView):
 
     @staticmethod
     def begin_game(ready_players, game_id):
-        ts = datetime.now()
+        ts = utc.localize(datetime.now())
         generate_round(ready_players, ts, game_id)
         # last, lets begin the game!
         Games.objects.filter(game_id=game_id).update(score=0, timestamp=ts, round_num=0)
+
 
 class GetScore(APIView):
     """
@@ -283,7 +313,8 @@ class GetScore(APIView):
             else:
                 return Response(game.score)
 
-#can be used to fulfill Silvina requirement "4) Indicate when the game is over and show the final score."
+
+# can be used to fulfill Silvina requirement "4) Indicate when the game is over and show the final score."
 class GameStatus(APIView):
     """
     Returns score of game
@@ -291,16 +322,15 @@ class GameStatus(APIView):
 
     def get(self, request, format=None):
         game_id = request.GET.get("game_id")
-        
-        game_started = game_started(game_id)
+
         game_over = game_finished(game_id)
-        
+
         resp = {}
-        if game_started and game_over:
+        if game_started(game_id) and game_over:
             resp["status"] = "finished"
             resp["score"] = Games.objects.filter(game_id=game_id).first().score
             return Response(resp)
-        elif game_started and not game_over:
+        elif game_started(game_id) and not game_over:
             resp["status"] = "active"
             resp["score"] = Games.objects.filter(game_id=game_id).first().score
             return Response(resp)
@@ -309,25 +339,28 @@ class GameStatus(APIView):
             resp["score"] = -1
             return Response(resp)
 
-def game_started(game_id):
-    ready_players = Games.objects.filter(game_id=game_id, esp_connected=True)
-    game_size = Games.objects.filter(game_id=game_id).first().number_of_players
-    game_started = len(ready_players) == game_size
-    return game_started
 
 def game_finished(game_id):
-    ts = datetime.now()
-    game_started_str = Games.objects.filter(game_id=game_id).first().timestamp
-    game_started_dt = datetime.strptime(game_started_str, '%Y-%m-%d %H:%M:%S.%f')
-    delta_time = (ts-game_started_dt).total_seconds()
+    ts = utc.localize(datetime.now())
+    game_started_dt = Games.objects.filter(game_id=game_id).first().timestamp
+    if game_started_dt is None:
+        return False
+    delta_time = (ts - game_started_dt).total_seconds()
     game_over = delta_time > MAX_TIME
     return game_over
+
+
+def game_started(game_id):
+    ready_players = Games.objects.filter(game_id=game_id, esp_connected=True)
+    game_size = Games.objects.filter(game_id=game_id).first().num_players
+    return len(ready_players) == game_size
 
 """
 
 ESP FACING METHODS
 
 """
+
 
 class CheckStart(APIView):
     """
@@ -338,18 +371,21 @@ class CheckStart(APIView):
         # extract tags
         user_id = request.GET.get("user_id")
         game_id = request.GET.get("game_id")
-        
-        #check if all players have joined
-        game_size = Games.objects.filter(game_id=game_id).first().number_of_players
+
+        # check if all players have joined
+        game_size = Games.objects.filter(game_id=game_id).first().num_players
         ready_players = Games.objects.filter(game_id=game_id, esp_connected=True)
-        response = base_json
-        
+        response = {
+            "status": "error",
+            "text": "SERVER ERROR: DIDNT OVERWRITE JSON"
+        }
+
         if len(ready_players) == game_size:
-            #if all players have joined, assign everything and send ESP response
+            # if all players have joined, assign everything and send ESP response
             fill_esp_response(response, user_id, game_id)
             return Response(response)
         else:
-            #otherwise inform game has not started, but connect ESP
+            # otherwise inform game has not started, but connect ESP
             Games.objects.filter(game_id=game_id, player_id=user_id).update(esp_connected=True)
             response["status"] = "static"
             response["text"] = "game has not not started"
@@ -362,50 +398,55 @@ class TaskComplete(APIView):
     """
 
     def post(self, request, format=None):
-        #extract tags
+        # extract tags
         user_id = request.POST.get("user_id")
         game_id = request.POST.get("game_id")
-        response = base_json
-        
-        #pull user task and check if they've repeated
+        response = {
+            "status": "error",
+            "text": "SERVER ERROR: DIDNT OVERWRITE JSON"
+        }
+
+        # pull user task and check if they've repeated
         current_task = CurrentTasks.objects.filter(game_id=game_id, player_id=user_id)
         assert len(current_task) == 1, f"user {user_id} has a weird amount of tasks assigned"
         if current_task.first().finished:
             response["status"] = "error"
             response["text"] = f"task for user {user_id} had already been logged, no change"
             return Response(response)
-        
-        #if not, check whether the game is over, and if its not, update the task to be finished
-        ts = datetime.now()
-        game_started_str = Games.objects.filter(game_id=game_id).first().timestamp
-        game_started_dt = datetime.strptime(game_started_str, '%Y-%m-%d %H:%M:%S.%f')
-        delta_time = (ts-game_started_dt).total_seconds()
+
+        # if not, check whether the game is over, and if its not, update the task to be finished
+        ts = utc.localize(datetime.now())
+        game_started_dt = Games.objects.filter(game_id=game_id).first().timestamp
+        # game_started_dt = datetime.strptime(game_started_str, '%Y-%m-%d %H:%M:%S.%f')
+        delta_time = (ts - game_started_dt).total_seconds()
+
         if delta_time > MAX_TIME:
             response["status"] = "over"
             response["text"] = f"task was completed after the game was over"
             return Response(response)
         CurrentTasks.objects.filter(game_id=game_id, player_id=user_id).update(finished=True)
 
-        #calculate score for task completion and add to player score
+        # calculate score for task completion and add to player score
         time_assigned, goal, archetype = \
-            CurrentTasks.objects.values_list('timestamp', 'goal', 'task_archetype').filter(game_id=game_id, player_id=user_id)[0]
-        add_score = score_fn(datetime.now(), time_assigned, goal, archetype)
+            CurrentTasks.objects.values_list('timestamp', 'goal', 'task_archetype').filter(game_id=game_id,
+                                                                                           player_id=user_id)[0]
+        add_score = score_fn(utc.localize(datetime.now()), time_assigned, goal, archetype)
         Games.objects.filter(game_id=game_id).update(score=F('score') + add_score)
-        
-        #check number of finished tasks against the number of people in game... if same then new round!
+
+        # check number of finished tasks against the number of people in game... if same then new round!
         finished_tasks = CurrentTasks.objects.filter(game_id=game_id, finished=True)
-        game_size = Games.objects.filter(game_id=game_id).first().number_of_players
-        
+        game_size = Games.objects.filter(game_id=game_id).first().num_players
+
         if len(finished_tasks) == game_size:
-            #wipe databases with round-level info
+            # wipe databases with round-level info
             self.clean_tasks(game_id)
-            
-            #generate a new round and update the round counter
+
+            # generate a new round and update the round counter
             self.generate_new_round(game_id)
-        
-        base_json["status"] = "update"
-        base_json["text"] = f"task for user {user_id} succesfully logged"
-        return Response(base_json)
+
+        response["status"] = "update"
+        response["text"] = f"task for user {user_id} succesfully logged"
+        return Response(response)
 
     @staticmethod
     def clean_tasks(game_id):
@@ -416,7 +457,7 @@ class TaskComplete(APIView):
     @staticmethod
     def generate_new_round(game_id):
         ready_players = Games.objects.filter(game_id=game_id).all()
-        generate_round(ready_players, datetime.now(), game_id)
+        generate_round(ready_players, utc.localize(datetime.now()), game_id)
         Games.objects.filter(game_id=game_id).update(round_num=F('round_num') + 1)
 
 
@@ -426,24 +467,27 @@ class GetNewRound(APIView):
     """
 
     def get(self, request, format=None):
-        #extract tags
+        # extract tags
         user_id = request.GET.get("user_id")
         game_id = request.GET.get("game_id")
         user_round_num = int(request.GET.get("round_num"))
         assert user_round_num is not None, "ESP transmitting user_round_num wrong"
-        response = base_json
-        
-        #check whether the game is over, and if it is then send back a response
-        ts = datetime.now()
-        game_started_str = Games.objects.filter(game_id=game_id).first().timestamp
-        game_started_dt = datetime.strptime(game_started_str, '%Y-%m-%d %H:%M:%S.%f')
-        delta_time = (ts-game_started_dt).total_seconds()
+        response = {
+            "status": "error",
+            "text": "SERVER ERROR: DIDNT OVERWRITE JSON"
+        }
+
+        # check whether the game is over, and if it is then send back a response
+        ts = utc.localize(datetime.now())
+        game_started_dt = Games.objects.filter(game_id=game_id).first().timestamp
+        # game_started_dt = datetime.strptime(game_started_str, '%Y-%m-%d %H:%M:%S.%f')
+        delta_time = (ts - game_started_dt).total_seconds()
         if delta_time > MAX_TIME:
             response["status"] = "over"
             response["text"] = f"Game Over!! Your team scored: {Games.objects.filter(game_id=game_id).first().score}"
             return Response(response)
 
-        #get the theoretical game round number. If our game number is highewr than the user's number, then we have started a new round and they need info
+        # get the theoretical game round number. If our game number is highewr than the user's number, then we have started a new round and they need info
         game_round_num = Games.objects.values_list('round_num', flat=True).filter(game_id=game_id)[0]
         if user_round_num < game_round_num:
             # The game has reassigned tasks and moved on to next round, pass this to the ESP
@@ -537,8 +581,8 @@ def fill_esp_response(response, user_id, game_id):
 
     required_ix = list(task_archetypes.keys()).index(assigned_task.task_archetype)
     ixs = set([i for i in range(len(task_archetypes.items()))]) - {required_ix}
-    valid_ixs = random.sample(list(ixs), 2) + [required_ix]
-    gui_quadrant_ixs = {0, 1, 2}
+    valid_ixs = random.sample(list(ixs), 3) + [required_ix]
+    gui_quadrant_ixs = {0, 1, 2, 3}
     for i, (archetype, name_options) in enumerate(task_archetypes.items()):
         response["controllers"][archetype] = {}
         response["controllers"][archetype]["controller_name"] = \
@@ -567,5 +611,5 @@ def score_fn(time_now, assign_time_str, goal, archetype):
     40 points: linear scaling of task difficulty based on goal and range, transformed into [20, 40]
     60 points: decay function based on speed to completion. instantaneous = 60 points. 1 minute = 30 points.
     """
-    assign_time = datetime.strptime(assign_time_str, '%Y-%m-%d %H:%M:%S.%f')
+    assign_time = datetime.strptime(str(assign_time_str), '%Y-%m-%d %H:%M:%S.%f%z')
     return score_speed((time_now - assign_time).total_seconds()) + score_difficulty(goal, archetype)
