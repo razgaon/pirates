@@ -371,14 +371,22 @@ class CheckStart(APIView):
         # extract tags
         user_id = request.GET.get("user_id")
         game_id = request.GET.get("game_id")
-
-        # check if all players have joined
-        game_size = Games.objects.filter(game_id=game_id).first().num_players
-        ready_players = Games.objects.filter(game_id=game_id, esp_connected=True)
+        
         response = {
             "status": "error",
             "text": "SERVER ERROR: DIDNT OVERWRITE JSON"
         }
+        # check for bad stuff
+        if game_id == None:
+            response["text"] = "No game_id provided"
+            return Response(response)
+        elif CurrentTasks.objects.filter(game_id=game_id).count() < 1:
+            response["text"] = "game doesn't exist"
+            return Response(response)
+
+        # check if all players have joined
+        game_size = Games.objects.filter(game_id=game_id).first().num_players
+        ready_players = Games.objects.filter(game_id=game_id, esp_connected=True)
 
         if len(ready_players) == game_size:
             # if all players have joined, assign everything and send ESP response
