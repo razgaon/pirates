@@ -57,8 +57,8 @@ const uint32_t PWM_CHANNEL_B = 2; //hardware pwm channel
 const int LOOP_PERIOD = 40;
 
 // Network constants
-char network[] = "Chinn Wifi";
-char password[] = "mypassword";
+char network[] = "MIT GUEST";
+char password[] = "";
 
 const int RESPONSE_TIMEOUT = 6000;     //ms to wait for response from host
 const uint16_t OUT_BUFFER_SIZE = 1500; //size of buffer to hold HTTP response
@@ -217,7 +217,6 @@ void setup()
 
 void loop()
 {
-
   if (game_over) {
     tft.fillScreen(TFT_BLACK);
     //      TODO - add request to server to get player's score
@@ -228,7 +227,7 @@ void loop()
     initialize = false;
     sent_success = false;
   };
-
+  
   if (!initialize) {
 
     // TEMPORARY: clear the db before initializing this player
@@ -283,6 +282,7 @@ void loop()
 
 
           task = strdup(doc["text"]); // "Increment the scadoodle to 10"
+          Serial.println(task);
           JsonObject controllers = doc["controllers"];
 
           JsonObject controllers_button_incrementer = controllers["button_incrementer"];
@@ -320,32 +320,32 @@ void loop()
           button_led.set_color_channels(PWM_CHANNEL_R, PWM_CHANNEL_G, PWM_CHANNEL_B);
           button_led.set_quadrant(controllers_button_led_number);
 
-          //          JsonObject controllers_microphone = controllers["microphone"];
-          //          controllers_microphone_controller_name = strdup(controllers_microphone["controller_name"]);
-          //          controllers_microphone_controller_goal = controllers_microphone["controller_goal"]; // -1
-          //          controllers_microphone_number = controllers_microphone["number"]; // 1
-          //
-          //
-          //          microphone.set_name(controllers_microphone_controller_name);
-          //          microphone.set_goal(controllers_microphone_controller_goal);
-          //          microphone.set_quadrant(controllers_microphone_number);
-          //
-          //          JsonObject controllers_shaker = controllers["shaker"];
-          //          controllers_shaker_controller_name = strdup(controllers_shaker["controller_name"]); // "Scadoodle"
-          //          controllers_shaker_controller_goal = controllers_shaker["controller_goal"]; // -1
-          //          controllers_shaker_number = controllers_shaker["number"]; // 1
-          //
-          //          shaker.set_name(controllers_shaker_controller_name);
-          //          shaker.set_goal(controllers_shaker_controller_goal);
-          //          shaker.set_quadrant(controllers_shaker_number);
+          JsonObject controllers_microphone = controllers["microphone"];
+          controllers_microphone_controller_name = strdup(controllers_microphone["controller_name"]);
+          controllers_microphone_controller_goal = controllers_microphone["controller_goal"]; // -1
+          controllers_microphone_number = controllers_microphone["number"]; // 1
+
+
+          microphone.set_name(controllers_microphone_controller_name);
+          microphone.set_goal(controllers_microphone_controller_goal);
+          microphone.set_quadrant(controllers_microphone_number);
+
+          JsonObject controllers_shaker = controllers["shaker"];
+          controllers_shaker_controller_name = strdup(controllers_shaker["controller_name"]); // "Scadoodle"
+          controllers_shaker_controller_goal = controllers_shaker["controller_goal"]; // -1
+          controllers_shaker_number = controllers_shaker["number"]; // 1
+
+          shaker.set_name(controllers_shaker_controller_name);
+          shaker.set_goal(controllers_shaker_controller_goal);
+          shaker.set_quadrant(controllers_shaker_number);
         }
       }
     }
 
     tft.setCursor(0, 0, 1);
-    tft.println("THIS IS TASK");
-    //    shaker.draw(false);
-    //    microphone.draw(false);
+    tft.println(task);
+    shaker.draw(false);
+    microphone.draw(false);
     toggler.draw(false);
     button_led.draw(false);
     incrementer.draw(false);
@@ -396,15 +396,15 @@ void loop()
       controllers_button_led_controller_goal = controllers_button_led["controller_goal"]; // -1
       controllers_button_led_number = controllers_button_led["number"];           //
 
-      //      JsonObject controllers_microphone = controllers["microphone"];
-      //      controllers_microphone_controller_name = strdup(controllers_microphone["controller_name"]);
-      //      controllers_microphone_controller_goal = controllers_microphone["controller_goal"]; // -1
-      //      controllers_microphone_number = controllers_microphone["number"]; // 1
-      //
-      //      JsonObject controllers_shaker = controllers["shaker"];
-      //      controllers_shaker_controller_name = strdup(controllers_shaker["controller_name"]); // "Scadoodle"
-      //      controllers_shaker_controller_goal = controllers_shaker["controller_goal"]; // -1
-      //      controllers_shaker_number = controllers_shaker["number"]; // 1
+      JsonObject controllers_microphone = controllers["microphone"];
+      controllers_microphone_controller_name = strdup(controllers_microphone["controller_name"]);
+      controllers_microphone_controller_goal = controllers_microphone["controller_goal"]; // -1
+      controllers_microphone_number = controllers_microphone["number"]; // 1
+
+      JsonObject controllers_shaker = controllers["shaker"];
+      controllers_shaker_controller_name = strdup(controllers_shaker["controller_name"]); // "Scadoodle"
+      controllers_shaker_controller_goal = controllers_shaker["controller_goal"]; // -1
+      controllers_shaker_number = controllers_shaker["number"]; // 1
     }
   }
 
@@ -420,111 +420,111 @@ void loop()
       button_led_updated = button_led.update();
     }
 
-    //    if (controllers_microphone_number != -1)
-    //    {
-    //      button_state = digitalRead(PIN4);
-    //      Serial.println(button_state);
-    //      if (button_state == 0) {
-    //        Serial.println("listening...");
-    //        record_audio();
-    //        Serial.println("sending...");
-    //        Serial.print("\nStarting connection to server...");
-    //        delay(300);
-    //        bool conn = false;
-    //        for (int i = 0; i < 10; i++) {
-    //          int val = (int)client.connect(SERVER, 443);
-    //          Serial.print(i); Serial.print(": "); Serial.println(val);
-    //          if (val != 0) {
-    //            conn = true;
-    //            break;
-    //          }
-    //          Serial.print(".");
-    //          delay(300);
-    //        }
-    //        if (!conn) {
-    //          Serial.println("Connection failed!");
-    //          return;
-    //        } else {
-    //          Serial.println("Connected to server!");
-    //          Serial.println(client.connected());
-    //          int len = strlen(speech_data);
-    //          // Make a HTTP request:
-    //          client.print("POST /v1/speech:recognize?key="); client.print(API_KEY); client.print(" HTTP/1.1\r\n");
-    //          client.print("Host: speech.googleapis.com\r\n");
-    //          client.print("Content-Type: application/json\r\n");
-    //          client.print("cache-control: no-cache\r\n");
-    //          client.print("Content-Length: "); client.print(len);
-    //          client.print("\r\n\r\n");
-    //          int ind = 0;
-    //          int jump_size = 1000;
-    //          char temp_holder[jump_size + 10] = {0};
-    //          Serial.println("sending data");
-    //          while (ind < len) {
-    //            delay(80);//experiment with this number!
-    //            //if (ind + jump_size < len) client.print(speech_data.substring(ind, ind + jump_size));
-    //            strncat(temp_holder, speech_data + ind, jump_size);
-    //            client.print(temp_holder);
-    //            ind += jump_size;
-    //            memset(temp_holder, 0, sizeof(temp_holder));
-    //          }
-    //          client.print("\r\n");
-    //          //Serial.print("\r\n\r\n");
-    //          Serial.println("Through send...");
-    //          unsigned long count = millis();
-    //          while (client.connected()) {
-    //            Serial.println("IN!");
-    //            String line = client.readStringUntil('\n');
-    //            Serial.print(line);
-    //            if (line == "\r") { //got header of response
-    //              Serial.println("headers received");
-    //              break;
-    //            }
-    //            if (millis() - count > RESPONSE_TIMEOUT) break;
-    //          }
-    //          Serial.println("");
-    //          Serial.println("Response...");
-    //          count = millis();
-    //          while (!client.available()) {
-    //            delay(100);
-    //            Serial.print(".");
-    //            if (millis() - count > RESPONSE_TIMEOUT) break;
-    //          }
-    //          Serial.println();
-    //          Serial.println("-----------");
-    //          memset(response, 0, sizeof(response));
-    //          while (client.available()) {
-    //            char_append(response, client.read(), OUT_BUFFER_SIZE);
-    //          }
-    //          Serial.println(response);
-    //          char* trans_id = strstr(response, "transcript");
-    //          if (trans_id != NULL) {
-    //            char* foll_coll = strstr(trans_id, ":");
-    //            char* starto = foll_coll + 2; //starting index
-    //            char* endo = strstr(starto + 1, "\""); //ending index
-    //            int transcript_len = endo - starto + 1;
-    //            transcript[0] = 0;
-    //            strncat(transcript, starto, transcript_len);
-    //            Serial.println(transcript);
-    //            microphone.draw(microphone.is_complete(transcript));
-    //          }
-    //          Serial.println("-----------");
-    //          client.stop();
-    //          Serial.println("done");
-    //        }
-    //        old_button_state = button_state;
-    //      }
-    //    }
-    //    if (controllers_shaker_number != -1)
-    //    {
-    //      // shaker:
-    //      imu.readAccelData(imu.accelCount);
-    //      float x, y, z;
-    //      x = imu.accelCount[0] * imu.aRes;
-    //      y = imu.accelCount[1] * imu.aRes;
-    //      z = imu.accelCount[2] * imu.aRes;
-    //      float acc_mag = sqrt(x * x + y * y + z * z);
-    //      shaker_updated = shaker.update(acc_mag);
-    //    }
+    if (controllers_microphone_number != -1)
+    {
+      button_state = digitalRead(PIN4);
+      Serial.println(button_state);
+      if (button_state == 0) {
+        Serial.println("listening...");
+        record_audio();
+        Serial.println("sending...");
+        Serial.print("\nStarting connection to server...");
+        delay(300);
+        bool conn = false;
+        for (int i = 0; i < 10; i++) {
+          int val = (int)client.connect(SERVER, 443);
+          Serial.print(i); Serial.print(": "); Serial.println(val);
+          if (val != 0) {
+            conn = true;
+            break;
+          }
+          Serial.print(".");
+          delay(300);
+        }
+        if (!conn) {
+          Serial.println("Connection failed!");
+          return;
+        } else {
+          Serial.println("Connected to server!");
+          Serial.println(client.connected());
+          int len = strlen(speech_data);
+          // Make a HTTP request:
+          client.print("POST /v1/speech:recognize?key="); client.print(API_KEY); client.print(" HTTP/1.1\r\n");
+          client.print("Host: speech.googleapis.com\r\n");
+          client.print("Content-Type: application/json\r\n");
+          client.print("cache-control: no-cache\r\n");
+          client.print("Content-Length: "); client.print(len);
+          client.print("\r\n\r\n");
+          int ind = 0;
+          int jump_size = 1000;
+          char temp_holder[jump_size + 10] = {0};
+          Serial.println("sending data");
+          while (ind < len) {
+            delay(80);//experiment with this number!
+            //if (ind + jump_size < len) client.print(speech_data.substring(ind, ind + jump_size));
+            strncat(temp_holder, speech_data + ind, jump_size);
+            client.print(temp_holder);
+            ind += jump_size;
+            memset(temp_holder, 0, sizeof(temp_holder));
+          }
+          client.print("\r\n");
+          //Serial.print("\r\n\r\n");
+          Serial.println("Through send...");
+          unsigned long count = millis();
+          while (client.connected()) {
+            Serial.println("IN!");
+            String line = client.readStringUntil('\n');
+            Serial.print(line);
+            if (line == "\r") { //got header of response
+              Serial.println("headers received");
+              break;
+            }
+            if (millis() - count > RESPONSE_TIMEOUT) break;
+          }
+          Serial.println("");
+          Serial.println("Response...");
+          count = millis();
+          while (!client.available()) {
+            delay(100);
+            Serial.print(".");
+            if (millis() - count > RESPONSE_TIMEOUT) break;
+          }
+          Serial.println();
+          Serial.println("-----------");
+          memset(response, 0, sizeof(response));
+          while (client.available()) {
+            char_append(response, client.read(), OUT_BUFFER_SIZE);
+          }
+          Serial.println(response);
+          char* trans_id = strstr(response, "transcript");
+          if (trans_id != NULL) {
+            char* foll_coll = strstr(trans_id, ":");
+            char* starto = foll_coll + 2; //starting index
+            char* endo = strstr(starto + 1, "\""); //ending index
+            int transcript_len = endo - starto + 1;
+            transcript[0] = 0;
+            strncat(transcript, starto, transcript_len);
+            Serial.println(transcript);
+            microphone.draw(microphone.is_complete(transcript));
+          }
+          Serial.println("-----------");
+          client.stop();
+          Serial.println("done");
+        }
+        old_button_state = button_state;
+      }
+    }
+    if (controllers_shaker_number != -1)
+    {
+      // shaker:
+      imu.readAccelData(imu.accelCount);
+      float x, y, z;
+      x = imu.accelCount[0] * imu.aRes;
+      y = imu.accelCount[1] * imu.aRes;
+      z = imu.accelCount[2] * imu.aRes;
+      float acc_mag = sqrt(x * x + y * y + z * z);
+      shaker_updated = shaker.update(acc_mag);
+    }
 
     // if a controller was updated, then show them to client - this will be updated to incorporate UI next week
     if ((incrementer.is_complete() || incrementer_updated) && !sent_success) {
@@ -540,16 +540,16 @@ void loop()
 
       button_led.draw(button_led.is_complete());
     }
-    //    if (microphone.is_complete(transcript) || microphone_updated) {
-    //      microphone.draw(microphone.is_complete());
-    //    }
-    //    if (shaker.is_complete() && shaker_updated()) {
-    //      shaker.draw(shaker.is_complete());
-    //    }
+    if (microphone.is_complete(transcript) || microphone_updated) {
+      microphone.draw(microphone.is_complete());
+    }
+    if (shaker.is_complete() && shaker_updated()) {
+      shaker.draw(shaker.is_complete());
+    }
 
     //  after updating the client view, post any successes to the backend
     if (incrementer.is_complete() || toggler.is_complete() || button_led.is_complete()
-        //    || microphone.is_complete(transcript) || shaker.is_complete()
+        || microphone.is_complete(transcript) || shaker.is_complete()
         && !sent_success) {
       post_completed_task(game_id, player_name, request, response, OUT_BUFFER_SIZE, RESPONSE_TIMEOUT);
       sent_success = true;
