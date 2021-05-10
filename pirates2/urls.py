@@ -56,7 +56,9 @@ urlpatterns = [
     path('start_game/', views.StartGame.as_view()),
 
     # Frontend
-    # path('get_games/', views.as_view()),
+    path('get_game_status/', views.GameStatus.as_view()),
+    path('get_game_tasks/', views.ViewTaskComms.as_view()),
+    path('get_task_statuses/', views.ViewTasks.as_view()),
 
     # Documentation
     url(r'^swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
