@@ -540,10 +540,10 @@ void loop()
 
       button_led.draw(button_led.is_complete());
     }
-    if (microphone.is_complete(transcript) || microphone_updated) {
-      microphone.draw(microphone.is_complete());
+    if ((microphone.is_complete(transcript) || microphone_updated) && !sent_success) {
+      microphone.draw(microphone.is_complete(transcript));
     }
-    if (shaker.is_complete() && shaker_updated()) {
+    if ((shaker.is_complete() || shaker_updated) && !sent_success) {
       shaker.draw(shaker.is_complete());
     }
 
