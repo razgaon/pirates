@@ -78,12 +78,16 @@ void Microphone::draw(bool s) {
     tft.println(controller_name);
     tft.setCursor(x, y + 10, 1);
     if (s) {
-      tft.println("Success  ");
-      tft.println("            ");
+      tft.setCursor(x, y + 10, 1);
+      tft.print("Success  ");
+      tft.setCursor(x, y + 20, 1);
+      tft.print("            ");
     }
     else {
-      tft.println("Password:");
-      tft.println(goal_word);
+      tft.setCursor(x, y + 10, 1);
+      tft.print("Password:");
+      tft.setCursor(x, y + 20, 1);
+      tft.print(goal_word);
     }
   }
 };
