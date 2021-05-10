@@ -561,7 +561,6 @@ def generate_round(ready_players, ts, game_id):
         taskcomm.save()
 
 
-
 def fill_esp_response(response, user_id, game_id):
     """
     Uses pre-GENERATED data to FILL up a JSON response in the way the ESP likes it
