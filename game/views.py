@@ -22,7 +22,7 @@ task_texts = {"button-toggle": "Toggle {control} [{num}] ",
               "button-LED-toggle": "Change {control} color [{num}]",
               "button-increment": "Press {control} [{num}]",
               "microphone-password": "Say password into {control} [{num}]",
-              "device-shake": "Shake {control} [{num}]}
+              "device-shake": "Shake {control} [{num}]"}
 
 task_goals = {"button-toggle": [0, 2],
               "button-LED-toggle": [0, 3],
