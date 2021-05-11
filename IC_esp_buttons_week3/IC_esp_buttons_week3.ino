@@ -47,9 +47,9 @@ const int PIN3 = 13; //button-led
 const int PIN4 = 32;
 
 // LED constants
-const int R_PIN = 14;
-const int G_PIN = 19;
-const int B_PIN = 0;
+const int R_PIN = 27;
+const int G_PIN = 33;
+const int B_PIN = 32;
 const uint32_t PWM_CHANNEL_R = 0; //hardware pwm channel
 const uint32_t PWM_CHANNEL_G = 1; //hardware pwm channel
 const uint32_t PWM_CHANNEL_B = 2; //hardware pwm channel
@@ -460,6 +460,11 @@ void loop()
       shaker.set_quadrant(controllers_shaker_number);
 
       tft.fillScreen(TFT_BLACK);
+      tft.drawLine(64, 10, 64, 160, TFT_WHITE);
+      tft.drawLine(0, 10, 128, 10, TFT_WHITE);
+      tft.drawLine(0, 80, 128, 80, TFT_WHITE);
+
+      
       tft.setCursor(0, 0, 1);
       tft.println(task);
       shaker.draw(false);
