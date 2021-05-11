@@ -111,7 +111,9 @@ void Button_Incrementer::set_quadrant(int q) {
   bool success true if the task was completed or false if it wasn't
 */
 void Button_Incrementer::draw(bool s) {
+  Serial.println("start draw");
   if (quadrant != -1) {
+    Serial.println("on screen");
     int x = 0;
     int y = 0;
     if (quadrant == 0) {
@@ -130,11 +132,18 @@ void Button_Incrementer::draw(bool s) {
       x = 70;
       y = 95;
     }
+    Serial.println("x and y");
+    Serial.println(x);
+    Serial.println(y);
+
     tft.setCursor(x, y - 10, 1);
     tft.println(controller_name);
     tft.setCursor(x, y + 10, 1);
     tft.fillRect(x, y, 50, 30, TFT_BLACK);
-    int interval = 30 / goal;
+
+    Serial.println("tft set");
+    int interval = (int)(30 / goal);
+    Serial.println("goal set");
     if (s) {
       tft.fillRect(x + 30, y + 40 - interval * count, 5, 5, TFT_BLACK);
       tft.println("Success    ");
