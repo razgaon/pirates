@@ -14,16 +14,16 @@ from .serializers import *
 from rest_framework import viewsets, status
 from rest_framework import permissions
 
-task_archetypes = {"button-toggle": ['a-inator', 'b-inator', 'c-inator', 'd-inator'],
-                   "button-LED-toggle": ['1-inator', '2-inator', '3-inator', '4-inator'],
-                   "button-increment": ['w-inator', 'x-inator', 'y-inator', 'z-inator'],
-                   "microphone-password": ['l-inator', 'm-inator', 'n-inator', 'o-inator', 'p-inator'],
+task_archetypes = {"button-toggle": ['a-er', 'b-er', 'c-er', 'd-er'],
+                   "button-LED-toggle": ['1-er', '2-er', '3-er', '4-er'],
+                   "button-increment": ['w-er', 'x-er', 'y-er', 'z-er'],
+                   "microphone-password": ['l-er', 'm-er', 'n-er', 'o-er', 'p-er'],
                    "device-shake": ['fee', 'fi', 'fo', 'fum']}
 
 task_texts = {"button-toggle": "Toggle {control} [{num}] ",
               "button-LED-toggle": "Change {control} color [{num}]",
               "button-increment": "Press {control} [{num}]",
-              "microphone-password": "Say password into {control} [{num}]",
+              "microphone-password": "Say {control} password [{num}]",
               "device-shake": "Shake {control} [{num}]"}
 
 task_goals = {"button-toggle": [0, 2],
