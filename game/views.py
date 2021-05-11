@@ -390,15 +390,15 @@ class CheckStart(APIView):
         game_size = Games.objects.filter(game_id=game_id).first().num_players
         ready_players = Games.objects.filter(game_id=game_id, esp_connected=True)
 
-        if len(ready_players) == game_size:
-            # if all players have joined, assign everything and send ESP response
+        if len(ready_players) == game_size and CurrentTasks.objects.filter(game_id=game_id).count() == game_size:
+            # if all players have joined, send ESP response
             fill_esp_response(response, user_id, game_id)
             return Response(response)
         else:
             # otherwise inform game has not started, but connect ESP
             Games.objects.filter(game_id=game_id, player_id=user_id).update(esp_connected=True)
             response["status"] = "static"
-            response["text"] = "game has not not started"
+            response["text"] = "game has not started"
             return Response(response)
 
 
