@@ -41,10 +41,10 @@ const char *CA_CERT =
 TFT_eSPI tft = TFT_eSPI();
 const int SCREEN_HEIGHT = 160;
 const int SCREEN_WIDTH = 128;
-const int PIN1 = 14; //incrementer    I HAVE 19, 35, 17, 5
-const int PIN2 = 0;  //toggler
-const int PIN3 = 5;  //button-led
-const int PIN4 = 13; //microphone
+const int PIN1 = 5;  //incrementer
+const int PIN2 = 12; //toggler
+const int PIN3 = 13; //button-led
+const int PIN4 = 0;
 
 // LED constants
 const int R_PIN = 32;
@@ -532,7 +532,8 @@ void loop()
         record_audio();
         Serial.println("sending...");
         Serial.print("\nStarting connection to server...");
-        delay(300);
+        delay(6000);
+        microphone.draw(microphone.is_complete("password"));
         bool conn = false;
         for (int i = 0; i < 10; i++)
         {

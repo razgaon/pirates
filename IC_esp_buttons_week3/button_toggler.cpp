@@ -29,7 +29,7 @@ Button_Toggler::Button_Toggler(Button button_inp, char* controller_name_inp, int
 
 
 Button_Toggler::Button_Toggler(TFT_eSPI t) {
-  num_states = 2;
+  num_states = 3;
   prev_state = 0;
   state = 0;
   button;
