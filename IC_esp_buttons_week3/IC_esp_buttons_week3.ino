@@ -23,7 +23,7 @@ const char *CA_CERT =
     "hvcNAQEBBQADggEPADCCAQoCggEBAKbPJA6+Lm8omUVCxKs+IVSbC9N/hHD6ErPL\n"
     "v4dfxn+G07IwXNb9rfF73OX4YJYJkhD10FPe+3t+c4isUoh7SqbKSaZeqKeMWhG8\n"
     "eoLrvozps6yWJQeXSpkqBy+0Hne/ig+1AnwblrjFuTosvNYSuetZfeLQBoZfXklq\n"
-    "tTleiDTsvHgMCJiEbKjNS7SgfQx5TfC4LcshytVsW33hoCmEofnTlEnLJGKRILzd\n"
+
     "C9XZzPnqJworc5HGnRusyMvo4KD0L5CLTfuwNhv2GXqF4G3yYROIXJ/gkwpRl4pa\n"
     "zq+r1feqCapgvdzZX99yqWATXgAByUr6P6TqBwMhAo6CygPCm48CAwEAAaOBnDCB\n"
     "mTAOBgNVHQ8BAf8EBAMCAQYwDwYDVR0TAQH/BAUwAwEB/zAdBgNVHQ4EFgQUm+IH\n"
@@ -41,20 +41,20 @@ const char *CA_CERT =
 TFT_eSPI tft = TFT_eSPI();
 const int SCREEN_HEIGHT = 160;
 const int SCREEN_WIDTH = 128;
-const int PIN1 = 5;  //incrementer
-const int PIN2 = 12; //toggler
-const int PIN3 = 13; //button-led
-const int PIN4 = 32;
+const int PIN1 = 14; //incrementer    I HAVE 19, 35, 17, 5
+const int PIN2 = 0;  //toggler
+const int PIN3 = 5;  //button-led
+const int PIN4 = 13; //microphone
 
 // LED constants
-const int R_PIN = 27;
+const int R_PIN = 32;
 const int G_PIN = 33;
-const int B_PIN = 32;
+const int B_PIN = 27;
 const uint32_t PWM_CHANNEL_R = 0; //hardware pwm channel
 const uint32_t PWM_CHANNEL_G = 1; //hardware pwm channel
 const uint32_t PWM_CHANNEL_B = 2; //hardware pwm channel
 
-const int LOOP_PERIOD = 40;
+// const int LOOP_PERIOD = 40;
 
 // Network constants
 char network[] = "walhallaP";
@@ -88,6 +88,7 @@ char speech_data[ENC_LEN + 200] = {0};    //global used for collecting speech da
 const char *SERVER = "speech.google.com"; // Server URL
 uint8_t old_val;
 uint32_t timer;
+uint32_t secondary_timer;
 
 // other
 uint32_t primary_timer;
@@ -106,7 +107,7 @@ Button button4(PIN4); //button object!
 
 // Each player fills this in before run (in future will make user input)
 char *game_id = "6867";
-char *player_name = "sandeep";
+char *player_name = "diego";
 int round_num = 0;
 //char* json_response;
 
@@ -195,6 +196,7 @@ void setup()
   pinMode(PIN4, INPUT_PULLUP);
 
   primary_timer = millis();
+  secondary_timer = millis();
   initialize = false;
 
   client.setCACert(CA_CERT);
@@ -295,9 +297,10 @@ void loop()
           task = strdup(doc["text"]); // "Increment the scadoodle to 10"
           Serial.println(task);
           JsonObject controllers = doc["controllers"];
+          round_num = doc["round_num"].as<int>();
 
           JsonObject controllers_button_incrementer = controllers["button-increment"].as<JsonObject>();
-          controllers_button_incrementer_controller_name = (char*)controllers_button_incrementer["controller_name"].as<const char*>();
+          controllers_button_incrementer_controller_name = (char *)controllers_button_incrementer["controller_name"].as<const char *>();
           controllers_button_incrementer_controller_goal = controllers_button_incrementer["controller_goal"];
           controllers_button_incrementer_number = controllers_button_incrementer["number"]; // 1
           incrementer.set_button(button1);
@@ -306,9 +309,8 @@ void loop()
           Serial.println(controllers_button_incrementer_controller_goal);
           incrementer.set_quadrant(controllers_button_incrementer_number);
 
-
           JsonObject controllers_button_toggler = controllers["button-toggle"].as<JsonObject>();
-          controllers_button_toggler_controller_name = (char*)controllers_button_toggler["controller_name"].as<const char*>();
+          controllers_button_toggler_controller_name = (char *)controllers_button_toggler["controller_name"].as<const char *>();
           controllers_button_toggler_controller_goal = controllers_button_toggler["controller_goal"]; // -1
           controllers_button_toggler_number = controllers_button_toggler["number"];                   // 1
 
@@ -320,7 +322,7 @@ void loop()
           toggler.set_quadrant(controllers_button_toggler_number);
 
           JsonObject controllers_button_led = controllers["button-LED-toggle"].as<JsonObject>();
-          controllers_button_led_controller_name = (char*)controllers_button_led["controller_name"].as<const char*>();
+          controllers_button_led_controller_name = (char *)controllers_button_led["controller_name"].as<const char *>();
           controllers_button_led_controller_goal = controllers_button_led["controller_goal"]; // -1
           controllers_button_led_number = controllers_button_led["number"];                   // 1
 
@@ -332,7 +334,7 @@ void loop()
           button_led.set_quadrant(controllers_button_led_number);
 
           JsonObject controllers_microphone = controllers["microphone-password"].as<JsonObject>();
-          controllers_microphone_controller_name = (char*)controllers_microphone["controller_name"].as<const char*>();
+          controllers_microphone_controller_name = (char *)controllers_microphone["controller_name"].as<const char *>();
           controllers_microphone_controller_goal = controllers_microphone["controller_goal"]; // -1
           controllers_microphone_number = controllers_microphone["number"];                   // 1
 
@@ -342,9 +344,9 @@ void loop()
           microphone.set_quadrant(controllers_microphone_number);
 
           JsonObject controllers_shaker = controllers["device-shake"].as<JsonObject>();
-          controllers_shaker_controller_name = (char*)controllers_shaker["controller_name"].as<const char*>(); // "Scadoodle"
-          controllers_shaker_controller_goal = controllers_shaker["controller_goal"];         // -1
-          controllers_shaker_number = controllers_shaker["number"];                           // 1
+          controllers_shaker_controller_name = (char *)controllers_shaker["controller_name"].as<const char *>(); // "Scadoodle"
+          controllers_shaker_controller_goal = controllers_shaker["controller_goal"];                            // -1
+          controllers_shaker_number = controllers_shaker["number"];                                              // 1
 
           shaker.set_name(controllers_shaker_controller_name);
           shaker.set_goal(controllers_shaker_controller_goal);
@@ -388,117 +390,122 @@ void loop()
   //  if we previously logged a sent task, now we wait until we get an update response
   if (new_round_req_loop)
   {
-    primary_timer = millis();
-    char *json_response = get_new_round(game_id, player_name, round_num, request, response, OUT_BUFFER_SIZE, RESPONSE_TIMEOUT);
-
-    //  parse JSON here
-    StaticJsonDocument<2000> doc;
-
-    DeserializationError error = deserializeJson(doc, json_response);
-
-    if (error)
+    if (millis() - secondary_timer >= LOOP_INTERVAL)
     {
-      Serial.print(F("deserializeJson() failed: "));
-      Serial.println(error.f_str());
-      return;
+      char *json_response = get_new_round(game_id, player_name, round_num, request, response, OUT_BUFFER_SIZE, RESPONSE_TIMEOUT);
+      Serial.println("diego is lame");
+      Serial.println(json_response);
+      Serial.println("diego is lame");
+      secondary_timer = millis();
+
+      //  parse JSON here
+      StaticJsonDocument<2000> doc;
+
+      DeserializationError error = deserializeJson(doc, json_response);
+
+      if (error)
+      {
+        Serial.print(F("deserializeJson() failed: "));
+        Serial.println(error.f_str());
+        return;
+      }
+
+      new_round = (strcmp(doc["status"], "update") == 0);
+      if (new_round)
+      {                             //if it's true, we got some new controls, and we have to update, else not
+        task = strdup(doc["text"]); // "Increment the scadoodle to 10"
+        JsonObject controllers = doc["controllers"];
+        round_num = doc["round_num"].as<int>();
+
+        JsonObject controllers_button_incrementer = controllers["button-increment"].as<JsonObject>();
+        controllers_button_incrementer_controller_name = (char *)controllers_button_incrementer["controller_name"].as<const char *>();
+        controllers_button_incrementer_controller_goal = controllers_button_incrementer["controller_goal"];
+        controllers_button_incrementer_number = controllers_button_incrementer["number"]; // 1
+        incrementer.set_button(button1);
+        incrementer.set_name(controllers_button_incrementer_controller_name);
+        incrementer.set_goal(controllers_button_incrementer_controller_goal);
+        incrementer.set_quadrant(controllers_button_incrementer_number);
+
+        JsonObject controllers_button_toggler = controllers["button-toggle"].as<JsonObject>();
+        controllers_button_toggler_controller_name = (char *)controllers_button_toggler["controller_name"].as<const char *>();
+        controllers_button_toggler_controller_goal = controllers_button_toggler["controller_goal"]; // -1
+        controllers_button_toggler_number = controllers_button_toggler["number"];                   // 1
+
+        toggler.set_button(button2);
+        toggler.set_name(controllers_button_toggler_controller_name);
+        toggler.set_goal(controllers_button_toggler_controller_goal);
+        toggler.set_num_states(2);
+        toggler.set_quadrant(controllers_button_toggler_number);
+
+        JsonObject controllers_button_led = controllers["button-LED-toggle"].as<JsonObject>();
+        controllers_button_led_controller_name = (char *)controllers_button_led["controller_name"].as<const char *>();
+        controllers_button_led_controller_goal = controllers_button_led["controller_goal"]; // -1
+        controllers_button_led_number = controllers_button_led["number"];                   // 1
+
+        button_led.set_button(button3);
+        button_led.set_name(controllers_button_led_controller_name);
+        button_led.set_goal(controllers_button_led_controller_goal);
+        button_led.set_color_channels(PWM_CHANNEL_R, PWM_CHANNEL_G, PWM_CHANNEL_B);
+        button_led.set_quadrant(controllers_button_led_number);
+
+        JsonObject controllers_microphone = controllers["microphone-password"].as<JsonObject>();
+        controllers_microphone_controller_name = (char *)controllers_microphone["controller_name"].as<const char *>();
+        controllers_microphone_controller_goal = controllers_microphone["controller_goal"]; // -1
+        controllers_microphone_number = controllers_microphone["number"];                   // 1
+
+        microphone.set_name(controllers_microphone_controller_name);
+        microphone.set_goal(controllers_microphone_controller_goal);
+        microphone.set_quadrant(controllers_microphone_number);
+
+        JsonObject controllers_shaker = controllers["device-shake"].as<JsonObject>();
+        controllers_shaker_controller_name = (char *)controllers_shaker["controller_name"].as<const char *>(); // "Scadoodle"
+        controllers_shaker_controller_goal = controllers_shaker["controller_goal"];                            // -1
+        controllers_shaker_number = controllers_shaker["number"];                                              // 1
+
+        shaker.set_name(controllers_shaker_controller_name);
+        shaker.set_goal(controllers_shaker_controller_goal);
+        shaker.set_quadrant(controllers_shaker_number);
+
+        tft.fillScreen(TFT_BLACK);
+        tft.drawLine(64, 10, 64, 160, TFT_WHITE);
+        tft.drawLine(0, 10, 128, 10, TFT_WHITE);
+        tft.drawLine(0, 80, 128, 80, TFT_WHITE);
+
+        tft.setCursor(0, 0, 1);
+        tft.println(task);
+        shaker.draw(false);
+        Serial.println("shaker drawn");
+        microphone.draw(false);
+        Serial.println("mic drawn");
+        toggler.draw(false);
+        Serial.println("toggler drawn");
+        button_led.draw(false);
+        Serial.println("buttonLED drawn");
+        incrementer.draw(false);
+        Serial.println("increm drawn");
+
+        sent_success = false; //only want to do this when task is completed
+      }
+
+      new_round_req_loop = (strcmp(doc["status"], "static") == 0 || strcmp(doc["status"], "error") == 0);
+      if (new_round_req_loop)
+      {
+
+        Serial.print("Message from server: ");
+        serializeJson(doc["text"], Serial);
+        Serial.println();
+      }
+
+      game_over = (strcmp(doc["status"], "over") == 0);
+      if (game_over)
+      {
+        const char *end_text_temp = doc["text"];
+        end_text = (char *)end_text_temp;
+        return;
+      }
+      //only one of new_round, new_round_req_loop, and game_over can be true at a time
+      doc.clear();
     }
-
-    new_round = (strcmp(doc["status"], "update") == 0);
-    if (new_round)
-    {                             //if it's true, we got some new controls, and we have to update, else not
-      task = strdup(doc["text"]); // "Increment the scadoodle to 10"
-      JsonObject controllers = doc["controllers"];
-
-      JsonObject controllers_button_incrementer = controllers["button-increment"].as<JsonObject>();
-      controllers_button_incrementer_controller_name = (char*)controllers_button_incrementer["controller_name"].as<const char*>();
-      controllers_button_incrementer_controller_goal = controllers_button_incrementer["controller_goal"];
-      controllers_button_incrementer_number = controllers_button_incrementer["number"]; // 1
-      incrementer.set_button(button1);
-      incrementer.set_name(controllers_button_incrementer_controller_name);
-      incrementer.set_goal(controllers_button_incrementer_controller_goal);
-      incrementer.set_quadrant(controllers_button_incrementer_number);
-
-
-      JsonObject controllers_button_toggler = controllers["button-toggle"].as<JsonObject>();
-      controllers_button_toggler_controller_name = (char*)controllers_button_toggler["controller_name"].as<const char*>();
-      controllers_button_toggler_controller_goal = controllers_button_toggler["controller_goal"]; // -1
-      controllers_button_toggler_number = controllers_button_toggler["number"];                   // 1
-
-      toggler.set_button(button2);
-      toggler.set_name(controllers_button_toggler_controller_name);
-      toggler.set_goal(controllers_button_toggler_controller_goal);
-      toggler.set_num_states(2);
-      toggler.set_quadrant(controllers_button_toggler_number);
-
-      JsonObject controllers_button_led = controllers["button-LED-toggle"].as<JsonObject>();
-      controllers_button_led_controller_name = (char*)controllers_button_led["controller_name"].as<const char*>();
-      controllers_button_led_controller_goal = controllers_button_led["controller_goal"]; // -1
-      controllers_button_led_number = controllers_button_led["number"];                   // 1
-
-      button_led.set_button(button3);
-      button_led.set_name(controllers_button_led_controller_name);
-      button_led.set_goal(controllers_button_led_controller_goal);
-      button_led.set_color_channels(PWM_CHANNEL_R, PWM_CHANNEL_G, PWM_CHANNEL_B);
-      button_led.set_quadrant(controllers_button_led_number);
-
-      JsonObject controllers_microphone = controllers["microphone-password"].as<JsonObject>();
-      controllers_microphone_controller_name = (char*)controllers_microphone["controller_name"].as<const char*>();
-      controllers_microphone_controller_goal = controllers_microphone["controller_goal"]; // -1
-      controllers_microphone_number = controllers_microphone["number"];                   // 1
-
-      microphone.set_name(controllers_microphone_controller_name);
-      microphone.set_goal(controllers_microphone_controller_goal);
-      microphone.set_quadrant(controllers_microphone_number);
-
-      JsonObject controllers_shaker = controllers["device-shake"].as<JsonObject>();
-      controllers_shaker_controller_name = (char*)controllers_shaker["controller_name"].as<const char*>(); // "Scadoodle"
-      controllers_shaker_controller_goal = controllers_shaker["controller_goal"];         // -1
-      controllers_shaker_number = controllers_shaker["number"];                           // 1
-
-      shaker.set_name(controllers_shaker_controller_name);
-      shaker.set_goal(controllers_shaker_controller_goal);
-      shaker.set_quadrant(controllers_shaker_number);
-
-      tft.fillScreen(TFT_BLACK);
-      tft.drawLine(64, 10, 64, 160, TFT_WHITE);
-      tft.drawLine(0, 10, 128, 10, TFT_WHITE);
-      tft.drawLine(0, 80, 128, 80, TFT_WHITE);
-
-      
-      tft.setCursor(0, 0, 1);
-      tft.println(task);
-      shaker.draw(false);
-      Serial.println("shaker drawn");
-      microphone.draw(false);
-      Serial.println("mic drawn");
-      toggler.draw(false);
-      Serial.println("toggler drawn");
-      button_led.draw(false);
-      Serial.println("buttonLED drawn");
-      incrementer.draw(false);
-      Serial.println("increm drawn");
-
-      sent_success = false; //only want to do this when task is completed
-    }
-
-    new_round_req_loop = (strcmp(doc["status"], "static") == 0 || strcmp(doc["status"], "error") == 0);
-    if (new_round_req_loop)
-    {
-
-      Serial.print("Message from server: ");
-      serializeJson(doc["text"], Serial);
-      Serial.println();
-    }
-
-    game_over = (strcmp(doc["status"], "over") == 0);
-    if (game_over)
-    {
-      const char* end_text_temp = doc["text"];
-      end_text = (char*)end_text_temp;
-      return;
-    }
-    //only one of new_round, new_round_req_loop, and game_over can be true at a time
-    doc.clear();
   }
 
   //  wait for task completion loop
