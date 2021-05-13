@@ -57,8 +57,8 @@ const uint32_t PWM_CHANNEL_B = 2; //hardware pwm channel
 // const int LOOP_PERIOD = 40;
 
 // Network constants
-char network[] = "walhallaP";
-char password[] = "modernvase639";
+char network[] = "Chinn Wifi";
+char password[] = "mypassword";
 
 const int RESPONSE_TIMEOUT = 6000;     //ms to wait for response from host
 const uint16_t OUT_BUFFER_SIZE = 1500; //size of buffer to hold HTTP response
@@ -91,6 +91,7 @@ uint32_t timer;
 uint32_t secondary_timer;
 
 // other
+
 uint32_t primary_timer;
 uint32_t LOOP_INTERVAL = 5000;
 bool prev_incrementer;
@@ -106,7 +107,7 @@ Button button3(PIN3); //button object!
 Button button4(PIN4); //button object!
 
 // Each player fills this in before run (in future will make user input)
-char *game_id = "6867";
+char *game_id;
 char *player_name = "diego";
 int round_num = 0;
 //char* json_response;
@@ -152,6 +153,121 @@ bool round_started = false;
 bool game_over = false;
 
 char *check_start(char *game_id, char *player_name, char *request_buffer, char *response, uint16_t response_size, uint16_t response_timeout);
+
+
+class GameInput {
+    char alphabet[50] = " ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    char msg[400] = {0}; //contains previous query response
+    char query_string[50] = {0};
+    int char_index;
+    int state;
+    uint32_t scrolling_timer;
+    const int scrolling_threshold = 150;
+    const float angle_threshold = 0.3;
+    uint32_t timer;
+    float prev_stonk_val;
+    bool sent;
+    
+  public:
+    GameInput() {
+      state = 0;
+      sent = false;
+      memset(msg, 0, sizeof(msg));
+      strcat(msg, "Long Press to Start Entering Game ID");
+      char_index = 0;
+      scrolling_timer = millis();
+    }
+
+    bool has_sent() {
+      return sent;
+    }
+
+    void reset_object() {
+      state = 0;
+      sent = false;
+      memset(msg, 0, sizeof(msg));
+      strcat(msg, "Long Press to Start Entering Game ID");
+      char_index = 0;
+      scrolling_timer = millis();
+    }
+
+    
+    void update(float angle, int button, char* output) {
+      char string[2];
+      if (state == 0) {
+        memset(output, 0, sizeof(output));
+        strcat(output, msg);
+        if (button == 2) {
+          state = 1;
+          char_index = 0;
+          memset(query_string, 0, sizeof(query_string));
+          strcat(query_string, "");
+          scrolling_timer = millis();
+        }
+      } else if (state == 1) {
+        if (button == 1) {
+          string[0] = alphabet[char_index];
+          string[1] = '\0';
+          strcat(query_string, string);
+          memset(output, 0, sizeof(output));
+          strcat(output, query_string);
+          char_index = 0;
+        } else if (button == 2) {
+          state = 2;
+          char_index = 0;
+          memset(output, 0, sizeof(output));
+          strcat(output, "");
+        } else if (millis() - scrolling_timer >= scrolling_threshold) {
+          if (angle >= angle_threshold) {
+            scrolling_timer = millis();
+            char_index += 1;
+            while (char_index < 0) {
+              char_index += strlen(alphabet);
+            }
+            char_index %= strlen(alphabet);
+          } else if (angle <= -angle_threshold) {
+            scrolling_timer = millis();
+            char_index -= 1;
+            while (char_index < 0) {
+              char_index += strlen(alphabet);
+            }
+            char_index %= strlen(alphabet);
+          }
+
+
+          memset(output, 0, sizeof(output));
+          strcat(output, query_string);
+          output[strlen(query_string)] = alphabet[char_index];
+          output[strlen(query_string) + 1] = '\0';
+
+        } else if (button == 0) {
+          memset(output, 0, sizeof(output));
+          strcat(output, query_string);
+          output[strlen(query_string)] = alphabet[char_index];
+          output[strlen(query_string) + 1] = '\0';
+        }
+
+      } else if (state == 2) {
+        memset(output, 0, sizeof(output));
+        //        strcat(output, "Joining Game");
+        state = 0;
+
+        //        TODO - modify to send gameID to server
+        output = check_start(query_string, player_name, request, response, OUT_BUFFER_SIZE, RESPONSE_TIMEOUT);
+        strcpy(game_id, query_string);
+        sent = true;
+        Serial.println(output);
+        //        memset(output, 0, sizeof(output));
+        //        strcat(output, query_string);
+        //        strcat(output, ":  ");
+        //        strcat(output, msg);
+        timer = millis();
+      }
+    }
+};
+
+
+GameInput gameInput;
 
 void setup()
 {
@@ -248,20 +364,36 @@ void loop()
     // TEMPORARY: clear the db before initializing this player
     // get_clear(request, response, OUT_BUFFER_SIZE, RESPONSE_TIMEOUT);
 
-    GameIDInput gameID;
-
-    while (gameID.getState() != 2) {
-        gameID.update(button1, etc); 
+    gameInput.reset_object();
+    //    char* json_response[3000];
+    char* output;
+    char* old_output;
+    while (!gameInput.has_sent()) {
+      float x, y;
+      get_angle(&x, &y); //get angle values
+      int bv = button1.update(); //get button value
+      gameInput.update(-y, bv, output);
+      if (strcmp(output, old_output) != 0) {//only draw if changed!
+        tft.fillScreen(TFT_BLACK);
+        tft.setCursor(0, 0, 1);
+        tft.println("Tilt screen to scroll");
+        tft.println(output);
+      }
+      memset(old_output, 0, sizeof(old_output));
+      strcat(old_output, output);
     }
-    
-//    tft.fillScreen(TFT_BLACK);
-//    tft.println("Press any button to indicate that you're ready!");
-//    Serial.println("Waiting for button to be pressed");
-//    // blocking waiting room
-//    
-//    while (!(button1.update() || button2.update() || button3.update() || button4.update()))
-//    {
-//    }
+    char* json_reponse;
+    strcat(json_reponse, output);
+
+
+    //    tft.fillScreen(TFT_BLACK);
+    //    tft.println("Press any button to indicate that you're ready!");
+    //    Serial.println("Waiting for button to be pressed");
+    //    // blocking waiting room
+    //
+    //    while (!(button1.update() || button2.update() || button3.update() || button4.update()))
+    //    {
+    //    }
 
     // post_ready_to_play(game_id, player_name, request, response, OUT_BUFFER_SIZE, RESPONSE_TIMEOUT);
     // indicate ready to play
@@ -1080,135 +1212,12 @@ inline unsigned char b64_lookup(char c)
   return -1;
 }
 
-class GameIDInput {
-    char alphabet[50] = " ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    char msg[400] = {0}; //contains previous query response
-    char query_string[50] = {0};
-    int char_index;
-    int state;
-    uint32_t scrolling_timer;
-    const int scrolling_threshold = 150;
-    const float angle_threshold = 0.3;
-    uint32_t timer;
-    float prev_stonk_val;
-  public:
-    GameIDInput() {
-      state = 0;
-      memset(msg, 0, sizeof(msg));
-      strcat(msg, "Long Press to Start Entering Game ID");
-      char_index = 0;
-      scrolling_timer = millis();
-    }
-    void update(float angle, int button, char* output) {
-      char string[2];
-      if (state == 0) {
-        memset(output, 0, sizeof(output));
-        strcat(output, msg);
-        if (button == 2) {
-          state = 1;
-          char_index = 0;
-          memset(query_string, 0, sizeof(query_string));
-          strcat(query_string, "");
-          scrolling_timer = millis();
-        }
-      } else if (state == 1) {
-        if (button == 1) {
-          string[0] = alphabet[char_index];
-          string[1] = '\0';
-          strcat(query_string, string);
-          memset(output, 0, sizeof(output));
-          strcat(output, query_string);
-          char_index = 0;
-        } else if (button == 2) {
-          state = 2;
-          char_index = 0;
-          memset(output, 0, sizeof(output));
-          strcat(output, "");
-        } else if (millis() - scrolling_timer >= scrolling_threshold) {
-          if (angle >= angle_threshold) {
-            scrolling_timer = millis();
-            char_index += 1;
-            while (char_index < 0) {
-              char_index += strlen(alphabet);
-            }
-            char_index %= strlen(alphabet);
-          } else if (angle <= -angle_threshold) {
-            scrolling_timer = millis();
-            char_index -= 1;
-            while (char_index < 0) {
-              char_index += strlen(alphabet);
-            }
-            char_index %= strlen(alphabet);
-          }
 
 
-          memset(output, 0, sizeof(output));
-          strcat(output, query_string);
-          output[strlen(query_string)] = alphabet[char_index];
-          output[strlen(query_string) + 1] = '\0';
 
-        } else if (button == 0) {
-          memset(output, 0, sizeof(output));
-          strcat(output, query_string);
-          output[strlen(query_string)] = alphabet[char_index];
-          output[strlen(query_string) + 1] = '\0';
-        }
-
-      } else if (state == 2) {
-        memset(output, 0, sizeof(output));
-        strcat(output, "Sending Query");
-        state = 3;
-
-//        TODO - modify to send gameID to server
-        lookup(query_string, msg, 400);
-        digitalWrite(R_PIN, HIGH);
-        digitalWrite(G_PIN, HIGH);
-        digitalWrite(B_PIN, LOW);
-        prev_stonk_val = atof(msg);
-        Serial.println("start1");
-        Serial.println(prev_stonk_val);
-        Serial.println(atof(msg));
-        memset(output, 0, sizeof(output));
-        strcat(output, query_string);
-        strcat(output, ":  ");
-        strcat(output, msg);
-        timer = millis();
-      } else if (state == 3) {
-        if (button == 2) {
-          state = 1;
-          memset(query_string, 0, sizeof(query_string));
-          strcat(query_string, "");
-          digitalWrite(R_PIN, LOW);
-          digitalWrite(B_PIN, LOW);
-          digitalWrite(G_PIN, LOW);
-        } else if (millis() - timer >= 10000) {
-          timer = millis();
-          lookup(query_string, msg, 400);
-          Serial.println("start2");
-          Serial.println(prev_stonk_val);
-          Serial.println(atof(msg));
-          if (prev_stonk_val < atof(msg) - 0.001) {
-            Serial.println("less than");
-            digitalWrite(R_PIN, LOW);
-            digitalWrite(B_PIN, LOW);
-            digitalWrite(G_PIN, HIGH);
-          } else if (prev_stonk_val > atof(msg) + 0.001) {
-            Serial.println("greater than");
-            digitalWrite(G_PIN, LOW);
-            digitalWrite(B_PIN, LOW);
-            digitalWrite(R_PIN, HIGH);
-          } else {
-            Serial.println("equal");
-            digitalWrite(R_PIN, HIGH);
-            digitalWrite(G_PIN, HIGH);
-            digitalWrite(B_PIN, LOW);
-          }
-          prev_stonk_val = atof(msg);
-          memset(output, 0, sizeof(output));
-          strcat(output, query_string);
-          strcat(output, ":  ");
-          strcat(output, msg);
-        }
-      }
-    }
-};
+//used to get x,y values from IMU accelerometer!
+void get_angle(float* x, float* y) {
+  imu.readAccelData(imu.accelCount);
+  *x = imu.accelCount[0] * imu.aRes;
+  *y = imu.accelCount[1] * imu.aRes;
+}
