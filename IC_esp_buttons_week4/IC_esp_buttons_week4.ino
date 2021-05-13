@@ -14,28 +14,28 @@
 #include "button_class.h"
 
 const char *CA_CERT =
-    "-----BEGIN CERTIFICATE-----\n"
-    "MIIDujCCAqKgAwIBAgILBAAAAAABD4Ym5g0wDQYJKoZIhvcNAQEFBQAwTDEgMB4G\n"
-    "A1UECxMXR2xvYmFsU2lnbiBSb290IENBIC0gUjIxEzARBgNVBAoTCkdsb2JhbFNp\n"
-    "Z24xEzARBgNVBAMTCkdsb2JhbFNpZ24wHhcNMDYxMjE1MDgwMDAwWhcNMjExMjE1\n"
-    "MDgwMDAwWjBMMSAwHgYDVQQLExdHbG9iYWxTaWduIFJvb3QgQ0EgLSBSMjETMBEG\n"
-    "A1UEChMKR2xvYmFsU2lnbjETMBEGA1UEAxMKR2xvYmFsU2lnbjCCASIwDQYJKoZI\n"
-    "hvcNAQEBBQADggEPADCCAQoCggEBAKbPJA6+Lm8omUVCxKs+IVSbC9N/hHD6ErPL\n"
-    "v4dfxn+G07IwXNb9rfF73OX4YJYJkhD10FPe+3t+c4isUoh7SqbKSaZeqKeMWhG8\n"
-    "eoLrvozps6yWJQeXSpkqBy+0Hne/ig+1AnwblrjFuTosvNYSuetZfeLQBoZfXklq\n"
+  "-----BEGIN CERTIFICATE-----\n"
+  "MIIDujCCAqKgAwIBAgILBAAAAAABD4Ym5g0wDQYJKoZIhvcNAQEFBQAwTDEgMB4G\n"
+  "A1UECxMXR2xvYmFsU2lnbiBSb290IENBIC0gUjIxEzARBgNVBAoTCkdsb2JhbFNp\n"
+  "Z24xEzARBgNVBAMTCkdsb2JhbFNpZ24wHhcNMDYxMjE1MDgwMDAwWhcNMjExMjE1\n"
+  "MDgwMDAwWjBMMSAwHgYDVQQLExdHbG9iYWxTaWduIFJvb3QgQ0EgLSBSMjETMBEG\n"
+  "A1UEChMKR2xvYmFsU2lnbjETMBEGA1UEAxMKR2xvYmFsU2lnbjCCASIwDQYJKoZI\n"
+  "hvcNAQEBBQADggEPADCCAQoCggEBAKbPJA6+Lm8omUVCxKs+IVSbC9N/hHD6ErPL\n"
+  "v4dfxn+G07IwXNb9rfF73OX4YJYJkhD10FPe+3t+c4isUoh7SqbKSaZeqKeMWhG8\n"
+  "eoLrvozps6yWJQeXSpkqBy+0Hne/ig+1AnwblrjFuTosvNYSuetZfeLQBoZfXklq\n"
 
-    "C9XZzPnqJworc5HGnRusyMvo4KD0L5CLTfuwNhv2GXqF4G3yYROIXJ/gkwpRl4pa\n"
-    "zq+r1feqCapgvdzZX99yqWATXgAByUr6P6TqBwMhAo6CygPCm48CAwEAAaOBnDCB\n"
-    "mTAOBgNVHQ8BAf8EBAMCAQYwDwYDVR0TAQH/BAUwAwEB/zAdBgNVHQ4EFgQUm+IH\n"
-    "V2ccHsBqBt5ZtJot39wZhi4wNgYDVR0fBC8wLTAroCmgJ4YlaHR0cDovL2NybC5n\n"
-    "bG9iYWxzaWduLm5ldC9yb290LXIyLmNybDAfBgNVHSMEGDAWgBSb4gdXZxwewGoG\n"
-    "3lm0mi3f3BmGLjANBgkqhkiG9w0BAQUFAAOCAQEAmYFThxxol4aR7OBKuEQLq4Gs\n"
-    "J0/WwbgcQ3izDJr86iw8bmEbTUsp9Z8FHSbBuOmDAGJFtqkIk7mpM0sYmsL4h4hO\n"
-    "291xNBrBVNpGP+DTKqttVCL1OmLNIG+6KYnX3ZHu01yiPqFbQfXf5WRDLenVOavS\n"
-    "ot+3i9DAgBkcRcAtjOj4LaR0VknFBbVPFd5uRHg5h6h+u/N5GJG79G+dwfCMNYxd\n"
-    "AfvDbbnvRG15RjF+Cv6pgsH/76tuIMRQyV+dTZsXjAzlAcmgQWpzU/qlULRuJQ/7\n"
-    "TBj0/VLZjmmx6BEP3ojY+x1J96relc8geMJgEtslQIxq/H5COEBkEveegeGTLg==\n"
-    "-----END CERTIFICATE-----\n";
+  "C9XZzPnqJworc5HGnRusyMvo4KD0L5CLTfuwNhv2GXqF4G3yYROIXJ/gkwpRl4pa\n"
+  "zq+r1feqCapgvdzZX99yqWATXgAByUr6P6TqBwMhAo6CygPCm48CAwEAAaOBnDCB\n"
+  "mTAOBgNVHQ8BAf8EBAMCAQYwDwYDVR0TAQH/BAUwAwEB/zAdBgNVHQ4EFgQUm+IH\n"
+  "V2ccHsBqBt5ZtJot39wZhi4wNgYDVR0fBC8wLTAroCmgJ4YlaHR0cDovL2NybC5n\n"
+  "bG9iYWxzaWduLm5ldC9yb290LXIyLmNybDAfBgNVHSMEGDAWgBSb4gdXZxwewGoG\n"
+  "3lm0mi3f3BmGLjANBgkqhkiG9w0BAQUFAAOCAQEAmYFThxxol4aR7OBKuEQLq4Gs\n"
+  "J0/WwbgcQ3izDJr86iw8bmEbTUsp9Z8FHSbBuOmDAGJFtqkIk7mpM0sYmsL4h4hO\n"
+  "291xNBrBVNpGP+DTKqttVCL1OmLNIG+6KYnX3ZHu01yiPqFbQfXf5WRDLenVOavS\n"
+  "ot+3i9DAgBkcRcAtjOj4LaR0VknFBbVPFd5uRHg5h6h+u/N5GJG79G+dwfCMNYxd\n"
+  "AfvDbbnvRG15RjF+Cv6pgsH/76tuIMRQyV+dTZsXjAzlAcmgQWpzU/qlULRuJQ/7\n"
+  "TBj0/VLZjmmx6BEP3ojY+x1J96relc8geMJgEtslQIxq/H5COEBkEveegeGTLg==\n"
+  "-----END CERTIFICATE-----\n";
 
 // ESP constants
 TFT_eSPI tft = TFT_eSPI();
@@ -229,7 +229,7 @@ void loop()
     tft.fillScreen(TFT_BLACK);
 
     tft.println(end_text); // gets score
-    tft.println("Press a button to go to the waiting room");
+    tft.println("Press a button to join a new game");
     //      blocking
     while (!(button1.update() || button2.update() || button3.update() || button4.update()))
     {
@@ -412,7 +412,7 @@ void loop()
 
       new_round = (strcmp(doc["status"], "update") == 0);
       if (new_round)
-      {                             //if it's true, we got some new controls, and we have to update, else not
+      { //if it's true, we got some new controls, and we have to update, else not
         task = strdup(doc["text"]); // "Increment the scadoodle to 10"
         JsonObject controllers = doc["controllers"];
         round_num = doc["round_num"].as<int>();
@@ -702,7 +702,7 @@ void record_audio()
   uint32_t start = millis();
   time_since_sample = micros();
   while (sample_num < NUM_SAMPLES && millis() - start < 5000)
-  {                                                           //read in NUM_SAMPLES worth of audio data
+  { //read in NUM_SAMPLES worth of audio data
     value = analogRead(AUDIO_IN);                             //make measurement
     raw_samples[sample_num % 3] = mulaw_encode(value - 1551); //remove 1.25V offset (from 12 bit reading)
     sample_num++;
@@ -1046,3 +1046,134 @@ inline unsigned char b64_lookup(char c)
     return 63;
   return -1;
 }
+
+class GameIDInput {
+    char alphabet[50] = " ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    char msg[400] = {0}; //contains previous query response
+    char query_string[50] = {0};
+    int char_index;
+    int state;
+    uint32_t scrolling_timer;
+    const int scrolling_threshold = 150;
+    const float angle_threshold = 0.3;
+    uint32_t timer;
+    float prev_stonk_val;
+  public:
+    StonkTicker() {
+      state = 0;
+      memset(msg, 0, sizeof(msg));
+      strcat(msg, "Long Press to Start Entering Game ID");
+      char_index = 0;
+      scrolling_timer = millis();
+    }
+    void update(float angle, int button, char* output) {
+      char string[2];
+      if (state == 0) {
+        memset(output, 0, sizeof(output));
+        strcat(output, msg);
+        if (button == 2) {
+          state = 1;
+          char_index = 0;
+          memset(query_string, 0, sizeof(query_string));
+          strcat(query_string, "");
+          scrolling_timer = millis();
+        }
+      } else if (state == 1) {
+        if (button == 1) {
+          string[0] = alphabet[char_index];
+          string[1] = '\0';
+          strcat(query_string, string);
+          memset(output, 0, sizeof(output));
+          strcat(output, query_string);
+          char_index = 0;
+        } else if (button == 2) {
+          state = 2;
+          char_index = 0;
+          memset(output, 0, sizeof(output));
+          strcat(output, "");
+        } else if (millis() - scrolling_timer >= scrolling_threshold) {
+          if (angle >= angle_threshold) {
+            scrolling_timer = millis();
+            char_index += 1;
+            while (char_index < 0) {
+              char_index += strlen(alphabet);
+            }
+            char_index %= strlen(alphabet);
+          } else if (angle <= -angle_threshold) {
+            scrolling_timer = millis();
+            char_index -= 1;
+            while (char_index < 0) {
+              char_index += strlen(alphabet);
+            }
+            char_index %= strlen(alphabet);
+          }
+
+
+          memset(output, 0, sizeof(output));
+          strcat(output, query_string);
+          output[strlen(query_string)] = alphabet[char_index];
+          output[strlen(query_string) + 1] = '\0';
+
+        } else if (button == 0) {
+          memset(output, 0, sizeof(output));
+          strcat(output, query_string);
+          output[strlen(query_string)] = alphabet[char_index];
+          output[strlen(query_string) + 1] = '\0';
+        }
+
+      } else if (state == 2) {
+        memset(output, 0, sizeof(output));
+        strcat(output, "Sending Query");
+        state = 3;
+        lookup(query_string, msg, 400);
+        digitalWrite(R_PIN, HIGH);
+        digitalWrite(G_PIN, HIGH);
+        digitalWrite(B_PIN, LOW);
+        prev_stonk_val = atof(msg);
+        Serial.println("start1");
+        Serial.println(prev_stonk_val);
+        Serial.println(atof(msg));
+        memset(output, 0, sizeof(output));
+        strcat(output, query_string);
+        strcat(output, ":  ");
+        strcat(output, msg);
+        timer = millis();
+      } else if (state == 3) {
+        if (button == 2) {
+          state = 1;
+          memset(query_string, 0, sizeof(query_string));
+          strcat(query_string, "");
+          digitalWrite(R_PIN, LOW);
+          digitalWrite(B_PIN, LOW);
+          digitalWrite(G_PIN, LOW);
+        } else if (millis() - timer >= 10000) {
+          timer = millis();
+          lookup(query_string, msg, 400);
+          Serial.println("start2");
+          Serial.println(prev_stonk_val);
+          Serial.println(atof(msg));
+          if (prev_stonk_val < atof(msg) - 0.001) {
+            Serial.println("less than");
+            digitalWrite(R_PIN, LOW);
+            digitalWrite(B_PIN, LOW);
+            digitalWrite(G_PIN, HIGH);
+          } else if (prev_stonk_val > atof(msg) + 0.001) {
+            Serial.println("greater than");
+            digitalWrite(G_PIN, LOW);
+            digitalWrite(B_PIN, LOW);
+            digitalWrite(R_PIN, HIGH);
+          } else {
+            Serial.println("equal");
+            digitalWrite(R_PIN, HIGH);
+            digitalWrite(G_PIN, HIGH);
+            digitalWrite(B_PIN, LOW);
+          }
+          prev_stonk_val = atof(msg);
+          memset(output, 0, sizeof(output));
+          strcat(output, query_string);
+          strcat(output, ":  ");
+          strcat(output, msg);
+        }
+      }
+    }
+};
