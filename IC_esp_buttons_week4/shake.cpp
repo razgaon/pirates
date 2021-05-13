@@ -85,6 +85,9 @@ bool Shake::update(float acc_mag) {
 };
 
 void Shake::draw(bool s) {
+  if (shakes == 0) {
+    shakes = 1;
+  }
   if (quadrant != -1) {
     int x = 0;
     int y = 0;
