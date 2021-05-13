@@ -112,7 +112,7 @@ void Button_Incrementer::set_quadrant(int q) {
 */
 void Button_Incrementer::draw(bool s) {
   Serial.println("start draw");
-  if (goal = 0) {
+  if (goal == 0) {
     goal = 1;
   }
   if (quadrant != -1) {
