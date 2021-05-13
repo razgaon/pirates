@@ -227,7 +227,7 @@ void loop()
   if (game_over)
   {
     tft.fillScreen(TFT_BLACK);
-    tft.setCursor(0, 0, 1);
+
     tft.println(end_text); // gets score
     tft.println("Press a button to join a new game");
     //      blocking
@@ -248,12 +248,20 @@ void loop()
     // TEMPORARY: clear the db before initializing this player
     // get_clear(request, response, OUT_BUFFER_SIZE, RESPONSE_TIMEOUT);
 
-    tft.fillScreen(TFT_BLACK);
-    tft.println("Press any button to indicate that you're ready!");
-    Serial.println("Waiting for button to be pressed");
-    // blocking waiting room
-    while (!(button1.update() || button2.update() || button3.update() || button4.update())) {
+    GameIDInput gameID;
+
+    while (gameID.getState() != 2) {
+        gameID.update(button1, etc); 
     }
+    
+//    tft.fillScreen(TFT_BLACK);
+//    tft.println("Press any button to indicate that you're ready!");
+//    Serial.println("Waiting for button to be pressed");
+//    // blocking waiting room
+//    
+//    while (!(button1.update() || button2.update() || button3.update() || button4.update()))
+//    {
+//    }
 
     // post_ready_to_play(game_id, player_name, request, response, OUT_BUFFER_SIZE, RESPONSE_TIMEOUT);
     // indicate ready to play
@@ -385,13 +393,16 @@ void loop()
     Serial.println("initialized");
   }
 
-  // game loop: if we previously logged a sent task, now we wait until we get an update response
+  //   game loop
+  //  if we previously logged a sent task, now we wait until we get an update response
   if (new_round_req_loop)
   {
     if (millis() - secondary_timer >= LOOP_INTERVAL)
     {
       char *json_response = get_new_round(game_id, player_name, round_num, request, response, OUT_BUFFER_SIZE, RESPONSE_TIMEOUT);
+      Serial.println("diego is lame");
       Serial.println(json_response);
+      Serial.println("diego is lame");
       secondary_timer = millis();
 
       //  parse JSON here
@@ -507,6 +518,32 @@ void loop()
   //  wait for task completion loop
   if (!new_round_req_loop)
   {
+    if (millis() - secondary_timer >= LOOP_INTERVAL)
+    {
+      char *json_response = get_new_round(game_id, player_name, round_num, request, response, OUT_BUFFER_SIZE, RESPONSE_TIMEOUT);
+      //  parse JSON here
+      secondary_timer = millis();
+      StaticJsonDocument<2000> doc;
+      DeserializationError error = deserializeJson(doc, json_response);
+
+      if (error)
+      {
+        Serial.print(F("deserializeJson() failed: "));
+        Serial.println(error.f_str());
+        return;
+      }
+
+      game_over = (strcmp(doc["status"], "over") == 0);
+      if (game_over)
+      {
+        const char *end_text_temp = doc["text"];
+        end_text = (char *)end_text_temp;
+        return;
+      }
+      //only one of new_round, new_round_req_loop, and game_over can be true at a time
+      doc.clear();
+    }
+
     if (controllers_button_incrementer_number != -1)
     {
       incrementer_updated = incrementer.update();
@@ -819,22 +856,22 @@ void do_http_request(char *host, char *request, char *response, uint16_t respons
   }
 }
 
-//void post_ready_to_play(char *game_id, char *player_name, char *request_buffer, char *response, uint16_t response_size, uint16_t response_timeout)
-//{
-//    char body[100];                                                                            //for body
-//    sprintf(body, "game_id=%s&user_id=%s", game_id, player_name);                              //generate body
-//    int body_len = strlen(body);                                                               //calculate body length (for header reporting)
-//    sprintf(request_buffer, "POST https://shipgroups.herokuapp.com/user_ready/ HTTP/1.1\r\n"); // TODO!!!!!
-//    strcat(request_buffer, "Host: shipgroups.herokuapp.com\r\n");
-//    strcat(request_buffer, "Content-Type: application/x-www-form-urlencoded\r\n");
-//    sprintf(request_buffer + strlen(request_buffer), "Content-Length: %d\r\n", body_len); //append string formatted to end of request buffer
-//    strcat(request_buffer, "\r\n");                                                       //new line from header to body
-//    strcat(request_buffer, body);                                                         //body
-//    strcat(request_buffer, "\r\n");                                                       //new line
-//    Serial.println(request_buffer);
-//    do_http_request("shipgroups.herokuapp.com", request_buffer, response, response_size, response_timeout, true);
-//    Serial.println(response); //viewable in Serial Terminal
-//}
+// void post_ready_to_play(char *game_id, char *player_name, char *request_buffer, char *response, uint16_t response_size, uint16_t response_timeout)
+// {
+//   char body[100];                                                                            //for body
+//   sprintf(body, "game_id=%s&user_id=%s", game_id, player_name);                              //generate body
+//   int body_len = strlen(body);                                                               //calculate body length (for header reporting)
+//   sprintf(request_buffer, "POST https://shipgroups.herokuapp.com/user_ready/ HTTP/1.1\r\n"); // TODO!!!!!
+//   strcat(request_buffer, "Host: shipgroups.herokuapp.com\r\n");
+//   strcat(request_buffer, "Content-Type: application/x-www-form-urlencoded\r\n");
+//   sprintf(request_buffer + strlen(request_buffer), "Content-Length: %d\r\n", body_len); //append string formatted to end of request buffer
+//   strcat(request_buffer, "\r\n");                                                       //new line from header to body
+//   strcat(request_buffer, body);                                                         //body
+//   strcat(request_buffer, "\r\n");                                                       //new line
+//   Serial.println(request_buffer);
+//   do_http_request("shipgroups.herokuapp.com", request_buffer, response, response_size, response_timeout, true);
+//   Serial.println(response); //viewable in Serial Terminal
+// }
 
 char *check_start(char *game_id, char *player_name, char *request_buffer, char *response, uint16_t response_size, uint16_t response_timeout)
 {
@@ -1055,7 +1092,7 @@ class GameIDInput {
     uint32_t timer;
     float prev_stonk_val;
   public:
-    StonkTicker() {
+    GameIDInput() {
       state = 0;
       memset(msg, 0, sizeof(msg));
       strcat(msg, "Long Press to Start Entering Game ID");
@@ -1121,6 +1158,8 @@ class GameIDInput {
         memset(output, 0, sizeof(output));
         strcat(output, "Sending Query");
         state = 3;
+
+//        TODO - modify to send gameID to server
         lookup(query_string, msg, 400);
         digitalWrite(R_PIN, HIGH);
         digitalWrite(G_PIN, HIGH);
