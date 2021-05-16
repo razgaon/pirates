@@ -10,7 +10,7 @@ class GamesSerializer(serializers.ModelSerializer):
                   'score',
                   'round_num',
                   'num_players',
-                  'ready',
+                  'esp_connected',
                   'timestamp')
 
     def create(self, validated_data):

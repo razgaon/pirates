@@ -24,9 +24,9 @@ from drf_yasg import openapi
 
 router = routers.DefaultRouter()
 router.register(r'db1', views.GamesViewSet)
-router.register(r'db2', views.GamesViewSet)
-router.register(r'db3', views.GamesViewSet)
-router.register(r'db4', views.GamesViewSet)
+router.register(r'db2', views.CurrentTasksViewSet)
+router.register(r'db3', views.TaskCommunicationViewSet)
+router.register(r'db4', views.TaskNameMappingsViewSet)
 
 schema_view = get_schema_view(
     openapi.Info(

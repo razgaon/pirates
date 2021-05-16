@@ -33,7 +33,7 @@ task_goals = {"button-toggle": [0, 2],
               "device-shake": [1, 1]}
 
 MAX_TIME = 180
-utc=pytz.UTC
+utc = pytz.UTC
 
 
 class GamesViewSet(viewsets.ModelViewSet):
@@ -172,20 +172,6 @@ class ViewGame(APIView):
         return Response(response)
 
 
-# [
-#     {
-#         "game_id": 1234,
-#         "players": [1, 2, 3],
-#         "num_of_players": 6,
-#         "status": 'started'
-#     },
-#     {
-#         "game_id": 1234,
-#         "players": [1, 2, 3],
-#         "num_of_players": 6,
-#         "status": 'not started'
-#     }
-# ]
 class ViewLobby(APIView):
     """
     Returns the current state of the game with the provided game id
@@ -207,7 +193,7 @@ def generate_game_status_json(game_id):
 
     g_o = game_finished(game_id)
     g_s = game_started(game_id)
-    
+
     resp_inner["status"] = "finished" if g_o else ("active" if g_s else "waiting for start")
     return resp_inner
 
@@ -248,19 +234,19 @@ class AddPlayer(APIView):
         # extract tags
         user_id = request.POST.get("user_id")
         game_id = request.POST.get("game_id")
-        
-        #check if game exists
+
+        # check if game exists
         game = Games.objects.filter(game_id=game_id).first()
         if game == None:
             return Response(f"There is no game recorded with id {game_id}")
-        
-        #check if game is full
+
+        # check if game is full
         players_in_game = Games.objects.filter(game_id=game_id).count()
         game_size = Games.objects.filter(game_id=game_id).first().num_players
         if game_size - players_in_game < 1:
             return Response(f"game {game_id} is already full")
-        
-        #if neither happens, add player to game
+
+        # if neither happens, add player to game
         data = {'game_id': game_id,
                 'player_id': user_id,
                 'num_players': game_size,
@@ -354,6 +340,7 @@ def game_started(game_id):
     ready_players = Games.objects.filter(game_id=game_id, esp_connected=True)
     game_size = Games.objects.filter(game_id=game_id).first().num_players
     return len(ready_players) == game_size
+
 
 """
 
