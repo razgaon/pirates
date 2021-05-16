@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 
 from pathlib import Path
 import os
+
 # import django_heroku
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -26,7 +27,7 @@ SECRET_KEY = 'django-insecure-g#c(r7gfz*njqv#ga_z@%ew!0%j)n*b2fk(t+szl@vf8x8o33m
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["shipgroups.herokuapp.com"]
+ALLOWED_HOSTS = ["shipgroups.herokuapp.com", 'pirates608.herokuapp.com']
 
 # Application definition
 
