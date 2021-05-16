@@ -41,15 +41,15 @@ const char *CA_CERT =
 TFT_eSPI tft = TFT_eSPI();
 const int SCREEN_HEIGHT = 160;
 const int SCREEN_WIDTH = 128;
-const int PIN1 = 5;  //incrementer
+const int PIN1 = 13;  //incrementer
 const int PIN2 = 12; //toggler
-const int PIN3 = 13; //button-led
-const int PIN4 = 0;
+const int PIN3 = 5; //button-led
+const int PIN4 = 32;
 
 // LED constants
-const int R_PIN = 32;
-const int G_PIN = 33;
-const int B_PIN = 27;
+const int R_PIN = 14;
+const int G_PIN = 19;
+const int B_PIN = 0;
 const uint32_t PWM_CHANNEL_R = 0; //hardware pwm channel
 const uint32_t PWM_CHANNEL_G = 1; //hardware pwm channel
 const uint32_t PWM_CHANNEL_B = 2; //hardware pwm channel
@@ -107,10 +107,10 @@ Button button3(PIN3); //button object!
 Button button4(PIN4); //button object!
 
 // Each player fills this in before run (in future will make user input)
-char *game_id;
-char *player_name = "diego";
+const uint32_t GAME_ID_LEN = 50;
+char game_id[GAME_ID_LEN];
+char *player_name = "itamar";
 int round_num = 0;
-//char* json_response;
 
 WiFiClientSecure client;
 Microphone microphone = Microphone(tft);
@@ -156,9 +156,9 @@ char *check_start(char *game_id, char *player_name, char *request_buffer, char *
 
 
 class GameInput {
-    char alphabet[50] = " ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    char alphabet[100] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     char msg[400] = {0}; //contains previous query response
-    char query_string[50] = {0};
+    char query_string[GAME_ID_LEN] = {0};
     int char_index;
     int state;
     uint32_t scrolling_timer;
@@ -167,7 +167,7 @@ class GameInput {
     uint32_t timer;
     float prev_stonk_val;
     bool sent;
-    
+
   public:
     GameInput() {
       state = 0;
@@ -191,12 +191,14 @@ class GameInput {
       scrolling_timer = millis();
     }
 
-    
+
     void update(float angle, int button, char* output) {
       char string[2];
       if (state == 0) {
         memset(output, 0, sizeof(output));
         strcat(output, msg);
+        strcat(output, "Tilt to scroll");
+
         if (button == 2) {
           state = 1;
           char_index = 0;
@@ -251,9 +253,8 @@ class GameInput {
         memset(output, 0, sizeof(output));
         //        strcat(output, "Joining Game");
         state = 0;
-
-        //        TODO - modify to send gameID to server
         output = check_start(query_string, player_name, request, response, OUT_BUFFER_SIZE, RESPONSE_TIMEOUT);
+        Serial.println(query_string);
         strcpy(game_id, query_string);
         sent = true;
         Serial.println(output);
@@ -366,42 +367,47 @@ void loop()
 
     gameInput.reset_object();
     //    char* json_response[3000];
-    char* output;
-    char* old_output;
+    char output[500];
+    char old_output[500];
     while (!gameInput.has_sent()) {
+
       float x, y;
       get_angle(&x, &y); //get angle values
       int bv = button1.update(); //get button value
       gameInput.update(-y, bv, output);
-      if (strcmp(output, old_output) != 0) {//only draw if changed!
+      //      gameInput.update(-0.5, 0, output);
+      if (strcmp(output, old_output) != 0) {   //only draw if changed!
         tft.fillScreen(TFT_BLACK);
         tft.setCursor(0, 0, 1);
-        tft.println("Tilt screen to scroll");
         tft.println(output);
       }
       memset(old_output, 0, sizeof(old_output));
       strcat(old_output, output);
+
     }
-    char* json_reponse;
+    char json_reponse[500];
     strcat(json_reponse, output);
 
+    StaticJsonDocument<2000> doc;
 
-    //    tft.fillScreen(TFT_BLACK);
-    //    tft.println("Press any button to indicate that you're ready!");
-    //    Serial.println("Waiting for button to be pressed");
-    //    // blocking waiting room
-    //
-    //    while (!(button1.update() || button2.update() || button3.update() || button4.update()))
-    //    {
-    //    }
+    DeserializationError error = deserializeJson(doc, json_response);
 
-    // post_ready_to_play(game_id, player_name, request, response, OUT_BUFFER_SIZE, RESPONSE_TIMEOUT);
-    // indicate ready to play
+    if (error)
+    {
+      Serial.print(F("deserializeJson() failed: "));
+      Serial.println(error.f_str());
+      return;
+    }
+
+    if (strcmp(doc["status"], "error") == 0) {
+      tft.fillScreen(TFT_BLACK);
+      tft.setCursor(0, 0, 1);
+      tft.println("This game code has an error, please restart your ESP and try again");
+    }
 
     // removed first request from here
     while (!leave_check_start)
     {
-
       if (millis() - primary_timer >= LOOP_INTERVAL)
       {
         tft.setCursor(0, 0, 1);
@@ -423,7 +429,10 @@ void loop()
           return;
         }
 
-        leave_check_start = (strcmp(doc["status"], "update") == 0); // true means that the round has just loaded
+        if (strcmp(doc["status"], "update") == 0) {
+          leave_check_start = true; // true means that the round has just loaded
+        }
+
         if (leave_check_start)
         {
           sent_success = false;
