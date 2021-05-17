@@ -44,7 +44,7 @@ const int SCREEN_WIDTH = 128;
 const int PIN1 = 13;  //incrementer
 const int PIN2 = 12; //toggler
 const int PIN3 = 5; //button-led
-const int PIN4 = 32;
+const int PIN4 = 27;
 
 // LED constants
 const int R_PIN = 14;
@@ -109,7 +109,7 @@ Button button4(PIN4); //button object!
 // Each player fills this in before run (in future will make user input)
 const uint32_t GAME_ID_LEN = 50;
 char game_id[GAME_ID_LEN];
-char *player_name = "itamar";
+char *player_name = "sejal";
 int round_num = 0;
 
 WiFiClientSecure client;
