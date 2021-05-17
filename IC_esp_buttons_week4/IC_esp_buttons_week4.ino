@@ -173,7 +173,7 @@ class GameInput {
       state = 0;
       sent = false;
       memset(msg, 0, sizeof(msg));
-      strcat(msg, "Long Press to Start Entering Game ID");
+      strcat(msg, "Long Press Button 1 to Start Entering Game ID");
       char_index = 0;
       scrolling_timer = millis();
     }
@@ -186,7 +186,7 @@ class GameInput {
       state = 0;
       sent = false;
       memset(msg, 0, sizeof(msg));
-      strcat(msg, "Long Press to Start Entering Game ID");
+      strcat(msg, "Long Press Button 1 to Start Entering Game ID");
       char_index = 0;
       scrolling_timer = millis();
     }
@@ -197,7 +197,7 @@ class GameInput {
       if (state == 0) {
         memset(output, 0, sizeof(output));
         strcat(output, msg);
-        strcat(output, "Tilt to scroll");
+//        strcat(output, "Tilt to scroll");
 
         if (button == 2) {
           state = 1;
@@ -253,15 +253,13 @@ class GameInput {
         memset(output, 0, sizeof(output));
         //        strcat(output, "Joining Game");
         state = 0;
-        output = check_start(query_string, player_name, request, response, OUT_BUFFER_SIZE, RESPONSE_TIMEOUT);
+        memset(output, 0, sizeof(output));
+        strcat(output, check_start(query_string, player_name, request, response, OUT_BUFFER_SIZE, RESPONSE_TIMEOUT));
+        //        output = ;
         Serial.println(query_string);
         strcpy(game_id, query_string);
         sent = true;
         Serial.println(output);
-        //        memset(output, 0, sizeof(output));
-        //        strcat(output, query_string);
-        //        strcat(output, ":  ");
-        //        strcat(output, msg);
         timer = millis();
       }
     }
@@ -367,8 +365,8 @@ void loop()
 
     gameInput.reset_object();
     //    char* json_response[3000];
-    char output[500];
-    char old_output[500];
+    char output[750];
+    char old_output[750];
     while (!gameInput.has_sent()) {
 
       float x, y;
@@ -385,12 +383,10 @@ void loop()
       strcat(old_output, output);
 
     }
-    char json_reponse[500];
-    strcat(json_reponse, output);
 
     StaticJsonDocument<2000> doc;
 
-    DeserializationError error = deserializeJson(doc, json_response);
+    DeserializationError error = deserializeJson(doc, output);
 
     if (error)
     {
