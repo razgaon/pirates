@@ -44,7 +44,7 @@ const int SCREEN_WIDTH = 128;
 const int PIN1 = 13;  //incrementer
 const int PIN2 = 12; //toggler
 const int PIN3 = 5; //button-led
-const int PIN4 = 32;
+const int PIN4 = 27;
 
 // LED constants
 const int R_PIN = 14;
@@ -57,8 +57,8 @@ const uint32_t PWM_CHANNEL_B = 2; //hardware pwm channel
 // const int LOOP_PERIOD = 40;
 
 // Network constants
-char network[] = "Chinn Wifi";
-char password[] = "mypassword";
+char network[] = "MIT GUEST";
+char password[] = "";
 
 const int RESPONSE_TIMEOUT = 6000;     //ms to wait for response from host
 const uint16_t OUT_BUFFER_SIZE = 1500; //size of buffer to hold HTTP response
@@ -109,7 +109,7 @@ Button button4(PIN4); //button object!
 // Each player fills this in before run (in future will make user input)
 const uint32_t GAME_ID_LEN = 50;
 char game_id[GAME_ID_LEN];
-char *player_name = "itamar";
+char *player_name = "sejal";
 int round_num = 0;
 
 WiFiClientSecure client;
@@ -156,7 +156,7 @@ char *check_start(char *game_id, char *player_name, char *request_buffer, char *
 
 
 class GameInput {
-    char alphabet[100] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    char alphabet[100] = " 0123456789";
     char msg[400] = {0}; //contains previous query response
     char query_string[GAME_ID_LEN] = {0};
     int char_index;
@@ -173,7 +173,7 @@ class GameInput {
       state = 0;
       sent = false;
       memset(msg, 0, sizeof(msg));
-      strcat(msg, "Long Press to Start Entering Game ID");
+      strcat(msg, "Long Press Button 1 to Start Entering Game ID");
       char_index = 0;
       scrolling_timer = millis();
     }
@@ -186,7 +186,7 @@ class GameInput {
       state = 0;
       sent = false;
       memset(msg, 0, sizeof(msg));
-      strcat(msg, "Long Press to Start Entering Game ID");
+      strcat(msg, "Long Press Button 1 to Start Entering Game ID");
       char_index = 0;
       scrolling_timer = millis();
     }
@@ -197,7 +197,7 @@ class GameInput {
       if (state == 0) {
         memset(output, 0, sizeof(output));
         strcat(output, msg);
-        strcat(output, "Tilt to scroll");
+//        strcat(output, "Tilt to scroll");
 
         if (button == 2) {
           state = 1;
@@ -253,15 +253,13 @@ class GameInput {
         memset(output, 0, sizeof(output));
         //        strcat(output, "Joining Game");
         state = 0;
-        output = check_start(query_string, player_name, request, response, OUT_BUFFER_SIZE, RESPONSE_TIMEOUT);
+        memset(output, 0, sizeof(output));
+        strcat(output, check_start(query_string, player_name, request, response, OUT_BUFFER_SIZE, RESPONSE_TIMEOUT));
+        //        output = ;
         Serial.println(query_string);
         strcpy(game_id, query_string);
         sent = true;
         Serial.println(output);
-        //        memset(output, 0, sizeof(output));
-        //        strcat(output, query_string);
-        //        strcat(output, ":  ");
-        //        strcat(output, msg);
         timer = millis();
       }
     }
@@ -367,8 +365,8 @@ void loop()
 
     gameInput.reset_object();
     //    char* json_response[3000];
-    char output[500];
-    char old_output[500];
+    char output[750];
+    char old_output[750];
     while (!gameInput.has_sent()) {
 
       float x, y;
@@ -385,12 +383,10 @@ void loop()
       strcat(old_output, output);
 
     }
-    char json_reponse[500];
-    strcat(json_reponse, output);
 
     StaticJsonDocument<2000> doc;
 
-    DeserializationError error = deserializeJson(doc, json_response);
+    DeserializationError error = deserializeJson(doc, output);
 
     if (error)
     {
@@ -403,6 +399,8 @@ void loop()
       tft.fillScreen(TFT_BLACK);
       tft.setCursor(0, 0, 1);
       tft.println("This game code has an error, please restart your ESP and try again");
+      delay(5000);
+      return;
     }
 
     // removed first request from here
