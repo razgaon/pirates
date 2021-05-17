@@ -109,7 +109,7 @@ Button button4(PIN4); //button object!
 // Each player fills this in before run (in future will make user input)
 const uint32_t GAME_ID_LEN = 50;
 char game_id[GAME_ID_LEN];
-char *player_name = "itamar";
+char *player_name = "sejal";
 int round_num = 0;
 
 WiFiClientSecure client;
@@ -385,8 +385,8 @@ void loop()
       strcat(old_output, output);
 
     }
-    char json_reponse[500];
-    strcat(json_reponse, output);
+    char json_response[500];
+    strcat(json_response, output);
 
     StaticJsonDocument<2000> doc;
 
