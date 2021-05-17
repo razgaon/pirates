@@ -57,8 +57,8 @@ const uint32_t PWM_CHANNEL_B = 2; //hardware pwm channel
 // const int LOOP_PERIOD = 40;
 
 // Network constants
-char network[] = "Chinn Wifi";
-char password[] = "mypassword";
+char network[] = "MIT GUEST";
+char password[] = "";
 
 const int RESPONSE_TIMEOUT = 6000;     //ms to wait for response from host
 const uint16_t OUT_BUFFER_SIZE = 1500; //size of buffer to hold HTTP response
@@ -399,6 +399,8 @@ void loop()
       tft.fillScreen(TFT_BLACK);
       tft.setCursor(0, 0, 1);
       tft.println("This game code has an error, please restart your ESP and try again");
+      delay(5000);
+      return;
     }
 
     // removed first request from here
