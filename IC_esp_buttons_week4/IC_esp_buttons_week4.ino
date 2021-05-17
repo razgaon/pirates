@@ -109,7 +109,7 @@ Button button4(PIN4); //button object!
 // Each player fills this in before run (in future will make user input)
 const uint32_t GAME_ID_LEN = 50;
 char game_id[GAME_ID_LEN];
-char *player_name = "sejal";
+char *player_name = "itamar";
 int round_num = 0;
 
 WiFiClientSecure client;
@@ -156,7 +156,7 @@ char *check_start(char *game_id, char *player_name, char *request_buffer, char *
 
 
 class GameInput {
-    char alphabet[100] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    char alphabet[100] = " 0123456789";
     char msg[400] = {0}; //contains previous query response
     char query_string[GAME_ID_LEN] = {0};
     int char_index;
