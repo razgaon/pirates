@@ -42,14 +42,14 @@ TFT_eSPI tft = TFT_eSPI();
 const int SCREEN_HEIGHT = 160;
 const int SCREEN_WIDTH = 128;
 const int PIN1 = 13;  //incrementer
-const int PIN2 = 12; //toggler
-const int PIN3 = 5; //button-led
-const int PIN4 = 27;
+const int PIN2 = 0; //toggler
+const int PIN3 = 12; //button-led
+const int PIN4 = 5; //
 
 // LED constants
-const int R_PIN = 14;
-const int G_PIN = 19;
-const int B_PIN = 0;
+const int R_PIN = 32;
+const int G_PIN = 33;
+const int B_PIN = 27;
 const uint32_t PWM_CHANNEL_R = 0; //hardware pwm channel
 const uint32_t PWM_CHANNEL_G = 1; //hardware pwm channel
 const uint32_t PWM_CHANNEL_B = 2; //hardware pwm channel
@@ -57,8 +57,8 @@ const uint32_t PWM_CHANNEL_B = 2; //hardware pwm channel
 // const int LOOP_PERIOD = 40;
 
 // Network constants
-char network[] = "MIT GUEST";
-char password[] = "";
+char network[] = "walhallaP";
+char password[] = "modernvase639";
 
 const int RESPONSE_TIMEOUT = 6000;     //ms to wait for response from host
 const uint16_t OUT_BUFFER_SIZE = 1500; //size of buffer to hold HTTP response
@@ -109,7 +109,7 @@ Button button4(PIN4); //button object!
 // Each player fills this in before run (in future will make user input)
 const uint32_t GAME_ID_LEN = 50;
 char game_id[GAME_ID_LEN];
-char *player_name = "sejal";
+char *player_name = "ritaank";
 int round_num = 0;
 
 WiFiClientSecure client;
@@ -464,7 +464,7 @@ void loop()
           toggler.set_name(controllers_button_toggler_controller_name);
           toggler.set_goal(controllers_button_toggler_controller_goal);
           Serial.println(controllers_button_toggler_controller_goal);
-          toggler.set_num_states(2);
+          toggler.set_num_states(3);
           toggler.set_quadrant(controllers_button_toggler_number);
 
           JsonObject controllers_button_led = controllers["button-LED-toggle"].as<JsonObject>();
@@ -580,7 +580,7 @@ void loop()
         toggler.set_button(button2);
         toggler.set_name(controllers_button_toggler_controller_name);
         toggler.set_goal(controllers_button_toggler_controller_goal);
-        toggler.set_num_states(2);
+        toggler.set_num_states(3);
         toggler.set_quadrant(controllers_button_toggler_number);
 
         JsonObject controllers_button_led = controllers["button-LED-toggle"].as<JsonObject>();
