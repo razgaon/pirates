@@ -272,8 +272,8 @@ class StartGame(APIView):
     Starts the game with game_id.
     """
 
-    def post(self, request, format=None):
-        game_id = request.POST.get("game_id")
+    def get(self, request, format=None):
+        game_id = request.GET.get("game_id")
 
         # Check if all players are ready, and if so start the game.
         ready_players = Games.objects.filter(game_id=game_id, esp_connected=True)
