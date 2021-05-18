@@ -368,6 +368,8 @@ class CheckStart(APIView):
         # extract tags
         user_id = request.GET.get("user_id")
         game_id = request.GET.get("game_id")
+
+        print('got params')
         
         response = {
             "status": "error",
@@ -378,8 +380,11 @@ class CheckStart(APIView):
             response["text"] = "No game_id provided"
             return Response(response)
         elif Games.objects.filter(game_id=game_id).count() < 1:
+            print("no game with id")
             response["text"] = "game doesn't exist"
             return Response(response)
+
+        print('no bad stuff')
 
         # check if all players have joined
         game_size = Games.objects.filter(game_id=game_id).first().num_players
