@@ -13,6 +13,5 @@ build/
 .idea/
 docs/_build/
 .vscode
-./db.sqlite3
 ./esp_buttons_week2/
 ./IC_esp_buttons_week3/
