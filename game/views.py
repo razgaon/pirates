@@ -250,12 +250,6 @@ class AddPlayer(APIView):
         if game is not None:
             return Response(f"Player {user_id} has already joined game with id {game_id}")
 
-        #check unique user_id
-        players = Games.objects.filter(game_id=game_id)
-        print(players)
-        if user_id in players:
-            return Response(f"User {user_id} is already in this game!")
-
         # check if game is full
         players_in_game = Games.objects.filter(game_id=game_id).count()
         game_size = Games.objects.filter(game_id=game_id).first().num_players
