@@ -4,7 +4,7 @@
 #include <TFT_eSPI.h>
 
 Button_Toggler::Button_Toggler() {
-  num_states = 2;
+  num_states = 3;
   prev_state = 0;
   state = 0;
   button;
