@@ -188,7 +188,7 @@ class ViewLobby(APIView):
 def generate_game_status_json(game_id):
     resp_inner = {}
     resp_inner["game_id"] = game_id
-    resp_inner["players"] = {pid:{"name":pid, "connected":conn} for pid, conn in Games.objects.filter(game_id=game_id).values_list("player_id", "esp_connected")}
+    resp_inner["players"] = [{"name":pid, "connected":conn} for pid, conn in Games.objects.filter(game_id=game_id).values_list("player_id", "esp_connected")]
     resp_inner["num_players"] = Games.objects.filter(game_id=game_id).first().num_players
 
     g_o = game_finished(game_id)
