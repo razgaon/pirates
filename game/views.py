@@ -347,9 +347,8 @@ def game_finished(game_id):
 
 
 def game_started(game_id):
-    ready_players = Games.objects.filter(game_id=game_id, esp_connected=True)
-    game_size = Games.objects.filter(game_id=game_id).first().num_players
-    return len(ready_players) == game_size
+    ready_player = Games.objects.filter(game_id=game_id, esp_connected=True).first()
+    return ready_player.timestamp != None
 
 
 """
