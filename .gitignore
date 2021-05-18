@@ -13,4 +13,4 @@ build/
 .idea/
 docs/_build/
 .vscode
-/db.sqlite3
+./db.sqlite3
