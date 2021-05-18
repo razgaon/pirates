@@ -247,8 +247,10 @@ class AddPlayer(APIView):
             return Response(f"There is no game recorded with id {game_id}")
 
         #check unique user_id
-        players = Games.objects.filter(game_id=game_id).count()
+        players = Games.objects.filter(game_id=game_id)
         print(players)
+        if user_id in players:
+            return Response(f"User {user_id} is already in this game!")
 
         # check if game is full
         players_in_game = Games.objects.filter(game_id=game_id).count()
