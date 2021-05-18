@@ -348,7 +348,10 @@ def game_finished(game_id):
 
 def game_started(game_id):
     ready_player = Games.objects.filter(game_id=game_id, esp_connected=True).first()
-    return ready_player.timestamp != None
+    try:
+        return ready_player.timestamp != None
+    except AttributeError as e:
+        return False
 
 
 """
