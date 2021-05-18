@@ -236,10 +236,10 @@ class AddPlayer(APIView):
     A player has sent a request that he is ready to start a game. Once all players are ready, the game can be started.
     """
 
-    def post(self, request, format=None):
+    def get(self, request, format=None):
         # extract tags
-        user_id = request.POST.get("user_id")
-        game_id = request.POST.get("game_id")
+        user_id = request.GET.get("user_id")
+        game_id = request.GET.get("game_id")
 
         # check if game exists
         game = Games.objects.filter(game_id=game_id).first()
