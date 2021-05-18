@@ -218,10 +218,9 @@ class CreateGame(APIView):
         data = {'game_id': game_id, 'player_id': user_id, 'num_players': number_of_players, 'esp_connected': False}
 
         # Save a new game in the database
-        game = Games.objects.filter(game_id=game_id, player_id=user_id).first()
+        game = Games.objects.filter(game_id=game_id).first()
         if game is not None:
-            return Response(
-                f"Player {user_id} already in the Game!")
+            return Response(f"Game {game_id} has already been created!")
         else:
 
             player = Games(**data)
@@ -243,16 +242,21 @@ class AddPlayer(APIView):
 
         # check if game exists
         game = Games.objects.filter(game_id=game_id).first()
-        if game == None:
+        if game is None:
             return Response(f"There is no game recorded with id {game_id}")
+        
+        # check if player in game
+        game = Games.objects.filter(game_id=game_id, player_id=user_id).first()
+        if game is not None:
+            return Response(f"Player {user_id} has already joined game with id {game_id}")
 
         # check if game is full
         players_in_game = Games.objects.filter(game_id=game_id).count()
         game_size = Games.objects.filter(game_id=game_id).first().num_players
-        if game_size - players_in_game < 1:
+        if game_size == players_in_game: #we have gotten enough players already
             return Response(f"game {game_id} is already full")
 
-        # if neither happens, add player to game
+        # if none of these happen, add player to game
         data = {'game_id': game_id,
                 'player_id': user_id,
                 'num_players': game_size,
@@ -377,8 +381,6 @@ class CheckStart(APIView):
             response["text"] = "game doesn't exist"
             return Response(response)
 
-        print('OKOK: game id provided and game exists')
-
         # check if all players have joined
         game_size = Games.objects.filter(game_id=game_id).first().num_players
         ready_players = Games.objects.filter(game_id=game_id, esp_connected=True)
@@ -408,6 +410,16 @@ class TaskComplete(APIView):
             "status": "error",
             "text": "SERVER ERROR: DIDNT OVERWRITE JSON"
         }
+        
+        # check if game exists
+        game = Games.objects.filter(game_id=game_id).first()
+        if game is None:
+            return Response(f"There is no game recorded with id {game_id}")
+        
+        # check if player in game
+        game = Games.objects.filter(game_id=game_id, player_id=user_id).first()
+        if game is None:
+            return Response(f"Player {user_id} is not in game with id {game_id}")
 
         # pull user task and check if they've repeated
         current_task = CurrentTasks.objects.filter(game_id=game_id, player_id=user_id)
@@ -427,29 +439,30 @@ class TaskComplete(APIView):
             response["status"] = "over"
             response["text"] = f"task was completed after the game was over"
             return Response(response)
-        CurrentTasks.objects.filter(game_id=game_id, player_id=user_id).update(finished=True)
+        else: #game still going, update task to finished first
+            CurrentTasks.objects.filter(game_id=game_id, player_id=user_id).update(finished=True)
 
-        # calculate score for task completion and add to player score
-        time_assigned, goal, archetype = \
-            CurrentTasks.objects.values_list('timestamp', 'goal', 'task_archetype').filter(game_id=game_id,
-                                                                                           player_id=user_id)[0]
-        add_score = score_fn(utc.localize(datetime.now()), time_assigned, goal, archetype)
-        Games.objects.filter(game_id=game_id).update(score=F('score') + add_score)
+            # calculate score for task completion and add to player score
+            time_assigned, goal, archetype = \
+                CurrentTasks.objects.values_list('timestamp', 'goal', 'task_archetype').filter(game_id=game_id,
+                                                                                            player_id=user_id)[0]
+            add_score = score_fn(utc.localize(datetime.now()), time_assigned, goal, archetype)
+            Games.objects.filter(game_id=game_id).update(score=F('score') + add_score)
 
-        # check number of finished tasks against the number of people in game... if same then new round!
-        finished_tasks = CurrentTasks.objects.filter(game_id=game_id, finished=True)
-        game_size = Games.objects.filter(game_id=game_id).first().num_players
+            # check number of finished tasks against the number of people in game... if same then new round!
+            finished_tasks = CurrentTasks.objects.filter(game_id=game_id, finished=True)
+            game_size = Games.objects.filter(game_id=game_id).first().num_players
 
-        if len(finished_tasks) == game_size:
-            # wipe databases with round-level info
-            self.clean_tasks(game_id)
+            if len(finished_tasks) == game_size:
+                # wipe databases with round-level info
+                self.clean_tasks(game_id)
 
-            # generate a new round and update the round counter
-            self.generate_new_round(game_id)
+                # generate a new round and update the round counter
+                self.generate_new_round(game_id)
 
-        response["status"] = "update"
-        response["text"] = f"task for user {user_id} succesfully logged"
-        return Response(response)
+            response["status"] = "update"
+            response["text"] = f"task for user {user_id} succesfully logged"
+            return Response(response)
 
     @staticmethod
     def clean_tasks(game_id):
@@ -479,6 +492,16 @@ class GetNewRound(APIView):
             "status": "error",
             "text": "SERVER ERROR: DIDNT OVERWRITE JSON"
         }
+        
+        # check if game exists
+        game = Games.objects.filter(game_id=game_id).first()
+        if game is None:
+            return Response(f"There is no game recorded with id {game_id}")
+        
+        # check if player in game
+        game = Games.objects.filter(game_id=game_id, player_id=user_id).first()
+        if game is None:
+            return Response(f"Player {user_id} is not in game with id {game_id}")
 
         # check whether the game is over, and if it is then send back a response
         ts = utc.localize(datetime.now())
