@@ -235,10 +235,10 @@ class AddPlayer(APIView):
     A player has sent a request that he is ready to start a game. Once all players are ready, the game can be started.
     """
 
-    def post(self, request, format=None):
+    def get(self, request, format=None):
         # extract tags
-        user_id = request.POST.get("user_id")
-        game_id = request.POST.get("game_id")
+        user_id = request.GET.get("user_id")
+        game_id = request.GET.get("game_id")
 
         # check if game exists
         game = Games.objects.filter(game_id=game_id).first()
@@ -249,6 +249,12 @@ class AddPlayer(APIView):
         game = Games.objects.filter(game_id=game_id, player_id=user_id).first()
         if game is not None:
             return Response(f"Player {user_id} has already joined game with id {game_id}")
+
+        #check unique user_id
+        players = Games.objects.filter(game_id=game_id)
+        print(players)
+        if user_id in players:
+            return Response(f"User {user_id} is already in this game!")
 
         # check if game is full
         players_in_game = Games.objects.filter(game_id=game_id).count()
