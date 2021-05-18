@@ -246,6 +246,10 @@ class AddPlayer(APIView):
         if game == None:
             return Response(f"There is no game recorded with id {game_id}")
 
+        #check unique user_id
+        players = Games.objects.filter(game_id=game_id).count()
+        print(players)
+
         # check if game is full
         players_in_game = Games.objects.filter(game_id=game_id).count()
         game_size = Games.objects.filter(game_id=game_id).first().num_players
