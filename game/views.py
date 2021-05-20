@@ -292,7 +292,7 @@ class StartGame(APIView):
         # last, lets begin the game!
         Games.objects.filter(game_id=game_id).update(score=0, timestamp=ts, round_num=0)
 
-
+#deprecated
 class GetScore(APIView):
     """
     Returns score of game
